@@ -1,8 +1,11 @@
 코드 사용 방법 :
-1. 학습에 필요한 오브켁트의 Mesh 정보를 담은 .stl 파일들을 준비하여 폴더안에 넣어 준비한다.
-2. .stl 파일의 파지 정보를 담는 .pkl 파일을 담을 폴더를 하나 생성한다.
-3. 오브젝트의 배치를 담을 .npz 파일을 담을 폴더를 train용, validation용, test용으로 하나씩 생성한다.
-4. main1~4.py를 순차적으로 실행한다.
+1. TrimeshVisualize 레포지토리를 설치
+2. tf_ops/compile_ops.sh 파일을 열어서 설치된 CUDA의 경로 및 NVCC의 경로를 올바르게 수정 (해당 경로는 터미널에 "whereis cuda", "whereis nvcc", "which nvcc" 등의 명령어로 확인 가능)
+3. pnet2_layers 폴더로 이동한 다음, 터미널을 열어서 "chmod u+x tf_ops/compile_ops.sh"로 파일에 권한을 부여
+4. 학습에 필요한 오브켁트의 Mesh 정보를 담은 .stl 파일들을 준비하여 폴더안에 넣어 준비한다.
+5. .stl 파일의 파지 정보를 담는 .pkl 파일을 담을 폴더를 하나 생성한다.
+6. 오브젝트의 배치를 담을 .npz 파일을 담을 폴더를 train용, validation용, test용으로 하나씩 생성한다.
+7. main1~4.py를 순차적으로 실행한다.
 
 코드 설명 :
 1. main1.py : .stl 파일을 먼저 적당한 크기로 스케일한 후에(최소 20mm, 최대 300mm) Suction Cup으로 파지할 수 있는 지점들을 찾아서 해당 정보들을 .pkl 형식으로 지정 폴더에 저장하는 파이썬 스크립트.
