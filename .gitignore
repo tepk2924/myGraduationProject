@@ -3,13 +3,16 @@ checkpoints/
 sample_objects/
 scenes_generated/
 successful_grasp/
+venv/
 __pycache__
 checkpoints
 sample_objects
 scenes_generated
 successful_grasp
+venv
 __pycache__/*
 checkpoints/*
 sample_objects/*
 scenes_generated/*
 successful_grasp/*
+venv/*
