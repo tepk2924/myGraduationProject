@@ -102,7 +102,7 @@ def visualize_network_output(pc, score, app, scene = None, return_scene = False)
             continue
         grasp_point = np.array([0, 0, 0])
         #일단 10mm의 화살표로 처리.
-        grasp_dir = np.array([0, 0, 0.01])
+        grasp_dir = np.array([0, 0, 0.03])
         points_transformed = trimesh.transform_points(
             [grasp_point, grasp_dir], grasp_tf[i])
         grasp_point = np.array(points_transformed[0])
