@@ -4,7 +4,7 @@ trimesh==3.23.5
 scipy==1.5.4
 trimeshVisualize @ https://github.com/JureHudoklin/trimesh_visualize
 Shapely==1.8.5.post1
-potpourri==0.0.4
+potpourri3d==0.0.4
 PyYAML==6.0
 Rtree==0.9.7
 python-fcl==0.7.0.5

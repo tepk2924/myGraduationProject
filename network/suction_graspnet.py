@@ -201,6 +201,9 @@ def approach_loss_fn(gt_approach, pred_approach):
     #TODO : 가끔씩 NaN을 내보내서 전체 학습 과정을 방해하는 경우가 있음.
     loss = tf.reduce_mean(
         tf.keras.losses.cosine_similarity(gt_approach, pred_approach)+1)
+    
+    if tf.math.is_nan(loss):
+        loss = tf.convert_to_tensor(0.0, dtype=float)
     return loss
 
 
