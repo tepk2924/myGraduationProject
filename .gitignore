@@ -16,3 +16,8 @@ sample_objects/*
 scenes_generated/*
 successful_grasp/*
 venv/*
+pnet2_layers/tf_ops/tf_interpolate_so.so
+pnet2_layers/grouping/tf_grouping_g.cu.o
+pnet2_layers/grouping/tf_grouping_so.so
+pnet2_layers/sampling/tf_sampling_g.cu.o
+pnet2_layers/sampling/tf_sampling_so.so
