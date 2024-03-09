@@ -2,8 +2,8 @@
 
 TF_CFLAGS=$(python3 -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
 TF_LFLAGS=$(python3 -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
-CUDA_ROOT=/usr/lib/cuda
-NVCC_ROOT=/usr/bin/nvcc
+CUDA_ROOT=/usr/local/cuda-11.2
+NVCC_ROOT=/usr/local/cuda-11.2/bin/nvcc
 
 cd tf_ops
 
