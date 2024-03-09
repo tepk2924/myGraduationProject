@@ -76,7 +76,10 @@ def main(num_of_files, number_of_points = 600):
             print(f"총 {success}개의 파일 생성함")
         except KeyboardInterrupt:
             raise KeyboardInterrupt
-        except:
+        except ValueError as e:
+            pass
+        except Exception as e:
+            print(e)
             pass
 
     print("Elapsed Time:" + str(time.time() - start_time))

@@ -1,15 +1,18 @@
-tensorflow==2.3.1
+#CUDA==11.2, CuDNN==8.1.1 or CUDA==10.1, CuDNN==7.6.5
+tensorflow==2.5.0 #for CUDA==11.2, tensorflow==2.3.1 for CUDA==10.1
 matplotlib==3.3.4
 trimesh==3.23.5
 scipy==1.5.4
 trimeshVisualize @ https://github.com/JureHudoklin/trimesh_visualize
-Shapely==1.8.5.post1
+shapely==1.8.5.post1
 potpourri3d==0.0.4
-PyYAML==6.0
+pyYAML==6.0
 Rtree==0.9.7
 python-fcl==0.7.0.5
 networkx==2.5.1
 protobuf==3.19.6
+#correct the CUDA_PATH and NVCC_PATH in pnet2_layers/tf_ops/compile_ops.sh file, which can be found by typing "whereis cuda" and "whereis nvcc" respectively.
+#compile the compile_ops.sh file
 opencv-python==4.5.4.58
 pyrender==0.1.45
 pyglet==1.5.0
