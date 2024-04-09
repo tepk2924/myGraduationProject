@@ -9,6 +9,7 @@ import signal
 import pickle
 import os
 
+from typing import Dict
 from os import walk
 # from trimesh.permutate import transform
 from multiprocessing import freeze_support
@@ -191,7 +192,7 @@ class TableScene(Scene):
         print("Gripper mesh loaded")
 
         # Table
-        self._table_dims = [1000.0, 1200.0, 600.0]
+        self._table_dims = [100000.0, 100000.0, 600.0]
         self._table_support = [600.0, 600.0, 600.0]
         self._table_pose = np.eye(4)
         self.table_mesh = trimesh.creation.box(self._table_dims)
@@ -415,7 +416,8 @@ class TableScene(Scene):
         self._table_pose[2, 3] += self._lower_table
         self.set_mesh_transform('table', self._table_pose)
 
-        return scene_filtered_grasps, scene_filtered_scores, object_names, object_transforms, obj_grasp_idcs
+        # return scene_filtered_grasps, scene_filtered_scores, object_names, object_transforms, obj_grasp_idcs
+        return scene_filtered_grasps, scene_filtered_scores, self._objects, self._poses
 
     def set_mesh_transform(self, name, transform):
         """
@@ -486,9 +488,9 @@ class SceneDatasetGenerator():
 
         
         try:
-            scene_grasps_tf, scene_grasps_scores, object_names, obj_transforms, obj_grasp_idcs = table_scene.arrange(num_objects, self._max_iterations)
-            self.save_scene(scene_id, scene_grasps_tf, scene_grasps_scores, object_names, obj_transforms, obj_grasp_idcs)
-            print(f"Created {scene_id} with {len(object_names)} objects, time taken {time.time()-start_time:.2f}secs ({len(os.listdir(self._save_dir)) - self._initial_file_num}/{self._number_of_scenes_generating})")
+            scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses = table_scene.arrange(num_objects, self._max_iterations)
+            self.save_scene(scene_id, scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses)
+            print(f"Created {scene_id} with {len(obj_meshes) - 1} objects, time taken {time.time()-start_time:.2f}secs ({len(os.listdir(self._save_dir)) - self._initial_file_num}/{self._number_of_scenes_generating})")
             return True
         
         except KeyboardInterrupt:
@@ -528,8 +530,8 @@ class SceneDatasetGenerator():
                 scene_id,
                 scene_grasps_tf,
                 scene_grasps_scores,
-                object_names, obj_transforms,
-                obj_grasp_idcs):
+                obj_meshes: Dict[str, trimesh.base.Trimesh],
+                obj_poses: Dict[str, np.ndarray]):
         """
         지정된(self._save_dir) 폴더에 scene 저장하는 메소드
         --------------
@@ -537,26 +539,48 @@ class SceneDatasetGenerator():
         scene_id {int} : Scene index
         scene_grasps_tf {list} : A list of grasps "tf".
         scene_grasps_scores {list} : A corresponding list of scores for individual grasps.
-        object_names {list} : List of object names in the scene
-        obj_transforms {list} : Transformation matrices for placing of individual objects
-        obj_grasp_idcs {list} : List of ints indicating to which object some grasps belong to.
         """
-        print("scene 세이브 중...")
-        scene_info = {}
-        scene_info["scene_grasps_tf"] = scene_grasps_tf
-        scene_info["scene_grasps_scores"] = scene_grasps_scores
-        scene_info["object_names"] = object_names
-        scene_info["obj_transforms"] = obj_transforms
-        scene_info["obj_grasp_idcs"] = np.array(obj_grasp_idcs)
-        output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
-        while os.path.exists(output_path):
-            self._scene_count += 1
-            output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
-        np.savez(output_path, **scene_info)
+        # print("scene 세이브 중...")
+        # scene_info = {}
+        # scene_info["scene_grasps_tf"] = scene_grasps_tf
+        # scene_info["scene_grasps_scores"] = scene_grasps_scores
+        # scene_info["object_names"] = object_names
+        # scene_info["obj_transforms"] = obj_transforms
+        # scene_info["obj_grasp_idcs"] = np.array(obj_grasp_idcs)
+        # output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
+        # while os.path.exists(output_path):
+        #     self._scene_count += 1
+        #     output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
+        # np.savez(output_path, **scene_info)
+        obj_names = obj_meshes.keys()
+        extension = ".obj"
+        with open(os.path.join(self._save_dir, scene_id + extension), "w") as f:
+            acc = 0
+            for obj_name in obj_names:
+                mesh = obj_meshes[obj_name]
+
+                pose = np.array(obj_poses[obj_name])
+
+                vertices = np.array(mesh.vertices).T
+                vertices = np.pad(vertices, ((0, 1), (0, 0)), 'constant', constant_values=1)
+                normals = np.array(mesh.vertex_normals).T
+                faces = np.array(mesh.faces)
+
+                vertices_transformed = (pose @ vertices).T
+                normals_transformed = (pose[:3, :3] @ normals).T
+
+                f.write(f"o {obj_name}\n")
+                for vertex in vertices_transformed:
+                    f.write(f"v {vertex[1]/1000:.6f} {vertex[2]/1000:.6f} {vertex[0]/1000:.6f}\n")
+                for normal in normals_transformed:
+                    f.write(f"vn {normal[1]:.4f} {normal[2]:.4f} {normal[0]:.4f}\n")
+                for face in faces:
+                    f.write(f"f {face[0] + 1 + acc}//{face[0] + 1 + acc} {face[1] + 1 + acc}//{face[1] + 1 + acc} {face[2] + 1 + acc}//{face[2] + 1 + acc}\n")
+                acc += len(vertices_transformed)
 
 if __name__ == "__main__":
     freeze_support()
-    number_of_scenes_generating = int(input("생성할 scene의 갯수 입력 : "))
+    number_of_scenes_generating = int(input("생성할 objscene의 갯수 입력 : "))
     data_dir = input(".pkl 파일이 들어있는 폴더의 디렉토리 입력 : ")
     save_dir = input("저장할 폴더의 디렉토리 입력 : ")
     # Generate a dataset of 3D Scenes

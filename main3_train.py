@@ -13,7 +13,8 @@ from data_generator import DataGenerator
 
 
 if __name__ == '__main__':
-
+    #tepk2924 조한 수정 : 모니터가 없는 컴퓨터에서 돌리기 위해 필요.
+    os.environ["PYOPENGL_PLATFORM"] = "egl"
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     # solve tensorflow memory issue
     physical_devices = tf.config.list_physical_devices('GPU')
