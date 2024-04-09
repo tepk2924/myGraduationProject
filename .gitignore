@@ -18,3 +18,11 @@ successful_grasp/*
 venv/*
 *.so
 *.o
+BlenderProc
+BlenderProc/
+objscenes_generated
+objscenes_generated/
+hdf5output
+hdf5output/
+texture_dataset
+texture_dataset/
