@@ -577,6 +577,11 @@ class SceneDatasetGenerator():
                 for face in faces:
                     f.write(f"f {face[0] + 1 + acc}//{face[0] + 1 + acc} {face[1] + 1 + acc}//{face[1] + 1 + acc} {face[2] + 1 + acc}//{face[2] + 1 + acc}\n")
                 acc += len(vertices_transformed)
+        scene_info = {}
+        scene_info["scene_grasps_tf"] = scene_grasps_tf
+        scene_info["scene_grasps_scores"] = scene_grasps_scores
+        extension = ".npz"
+        np.savez(os.path.join(self._save_dir, scene_id + extension), **scene_info)
 
 if __name__ == "__main__":
     freeze_support()

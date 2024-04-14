@@ -9,18 +9,23 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('--obj_file', type=str)
 args = parser.parse_args()
+filepath:str = args.obj_file
 
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
-objs = bproc.loader.load_obj(args.obj_file)
+objs = bproc.loader.load_obj(filepath)
+with np.load(filepath.replace(".obj", ".npz")) as grasp_data:
+    grasps_tf = grasp_data["scene_grasps_tf"]
+    grasps_scores = grasp_data["scene_grasps_scores"]
+
 obj_tags = []
 for obj in objs:
     obj_name = obj.get_name()
     if obj_name == "table":
-        obj_tag = "table"
+        obj_tag = "background"
     else:
         obj_tag = random.choice(["invalid", "valid"])
-    if obj_tag == "table":
+    if obj_tag == "background":
         obj.set_cp("category_id", 0)
     elif obj_tag == "invalid":
         obj.set_cp("category_id", 1)
@@ -73,9 +78,24 @@ points = bproc.camera.pointcloud_from_depth(depth)
 points = points.reshape(-1, 3)
 
 bproc.renderer.enable_segmentation_output(map_by=["category_id"])
+bproc.renderer.enable_depth_output(activate_antialiasing=False)
+
+grasps_tf[:, :3, 3] /= 1000
+rotation = np.array([[0, 1, 0],
+                     [-1, 0, 0],
+                     [0, 0, 1]], dtype=float)
+grasps_tf[:, :3, :] = np.matmul(rotation, grasps_tf[:, :3, :])
+
+# A = np.tile(np.array([0, 0, 0.03, 1], dtype=float), (len(grasps_tf), 1)).T
+# for i in range(len(grasps_tf)):
+#     A[:, i] = grasps_tf[i, :, :]@A[:, i]
+# A = A[:3].T
+# grasp_cloud = bproc.object.create_from_point_cloud(grasps_tf[:, :3, 3], "grasps", add_geometry_nodes_visualization=True)
+# grasp_cloud_2 = bproc.object.create_from_point_cloud(A, "grasps2", add_geometry_nodes_visualization=True)
 
 data = bproc.renderer.render()
 data["pc"] = [points]
-print(data)
+data["grasps_tf"] = [grasps_tf]
+data["grasps_scores"] = [grasps_scores]
 
 bproc.writer.write_hdf5("./hdf5output", data)
