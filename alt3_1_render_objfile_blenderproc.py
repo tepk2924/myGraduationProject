@@ -76,6 +76,7 @@ depth = bproc.camera.depth_via_raytracing(bvh_tree)
 
 points = bproc.camera.pointcloud_from_depth(depth)
 points = points.reshape(-1, 3)
+points = np.float32(points)
 
 bproc.renderer.enable_segmentation_output(map_by=["category_id"])
 bproc.renderer.enable_depth_output(activate_antialiasing=False)
