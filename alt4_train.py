@@ -17,7 +17,6 @@ DECAY = 5.0e-05
 EPOCHS = 20
 
 if __name__ == '__main__':
-    #tepk2924 조한 수정 : 모니터가 없는 컴퓨터에서 돌리기 위해 필요.
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
     # solve tensorflow memory issue
     physical_devices = tf.config.list_physical_devices('GPU')
@@ -51,8 +50,6 @@ if __name__ == '__main__':
     # Load Datatset #
     #################
     
-    #tepk2924 조한 수정 : batch size와 raw_num_point를 자동으로 컨피그 파일에 맞추도록
-    data_dir = os.path.join(ROOT_DIR, "data")
     train_dataset = DataGenerator(input("Train hdf5 파일이 들어있는 폴더의 디렉토리 입력 : "))
     validation_dataset = DataGenerator(input("Validation hdf5 파일이 들어있는 폴더의 디렉토리 입력 : "))
 

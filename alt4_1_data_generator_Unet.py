@@ -12,7 +12,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         A data object that can be used to load scenes and generate point cloud batches for training .
         ----------
         Args:
-            data_dir {str}: The path to the data directory containing scenes meshes and grasps
+            data_dir {str}: The path to the data directory containing hdf5 file
         ----------
         """
         self.data_dir = data_dir
@@ -63,13 +63,20 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         gt_segmap_onehot = onehot[segmap]
 
-        gt_segmap_onehot = tf.convert_to_tensor(gt_segmap_onehot, dtype=tf.float32)
-        RGBD_normalized = tf.convert_to_tensor(RGBD_normalized, dtype=tf.float32)
 
-        return RGBD_normalized, gt_segmap_onehot #(H, W, 4), (H, W, 3)
+        #일단 현재는 Batch Size를 1로 고정시켜 놓는다. 나중에 Batch Size를 조정할 수 있도록 만들면 좋으련만.....
+        gt_segmap_onehot = tf.expand_dims(tf.convert_to_tensor(gt_segmap_onehot, dtype=tf.float32), axis=0)
+        RGBD_normalized = tf.expand_dims(tf.convert_to_tensor(RGBD_normalized, dtype=tf.float32), axis=0)
+
+        #B = 1
+        return RGBD_normalized, gt_segmap_onehot #(B, H, W, 4), (B, H, W, 3)
 
     def __len__(self):
         return self.num_of_scenes_3d
 
     def shuffle(self):
         self.scene_order = np.random.shuffle(self.scene_order)
+
+if __name__ == "__main__":
+    test = DataGenerator(input("입력 : "))
+    print(test[0])

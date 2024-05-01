@@ -8,7 +8,6 @@ import tensorflow as tf
 
 ROOT_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-# add config as arg later
 def build_unet_graph(BC: int):
     """
     Build computational graph for Suction-GraspNet
@@ -18,54 +17,54 @@ def build_unet_graph(BC: int):
         BC : hyperparameter, Basic Channels
     --------------
     Returns:
-        input_tensor tf.Tensor : Input point cloud (image_height: 480, image_width: 640, 4).
-        output_tensor: tf.Tensor : output_tensor to be compared to gt (image_height: 480, image_width: 640, 3)
+        input_tensor tf.Tensor : Input point cloud (batch_num, image_height: 480, image_width: 640, 4).
+        output_tensor: tf.Tensor : output_tensor to be compared to gt (batch_num, image_height: 480, image_width: 640, 3)
     """
 
-    input_tensor = tf.keras.Input((480, 640, 4)) #(480, 640, 4)
+    input_tensor = tf.keras.Input((480, 640, 4), batch_size=1) #(B, 480, 640, 4)
     relu = tf.keras.layers.ReLU()
-    layer00 = tf.expand_dims(tf.pad(input_tensor, ((94, 94), (94, 94), (0, 0)), mode="SYMMETRIC"), axis=0) #(1, 668, 828, 4)
-    layer01 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer00)) #(1, 666, 826, BC)
-    layer02 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer01)) #(1, 664, 824, BC)
-    layer10 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer02) #(1, 332, 412, BC)
-    layer11 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer10)) #(1, 330, 410, 2BC)
-    layer12 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer11)) #(1, 328, 408, 2BC)
-    layer20 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer12) #(1, 164, 204, 2BC)
-    layer21 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer20)) #(1, 162, 202, 4BC)
-    layer22 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer21)) #(1, 160, 200, 4BC)
-    layer30 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer22) #(1, 80, 100, 4BC)
-    layer31 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer30)) #(1, 78, 98, 8BC)
-    layer32 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer31)) #(1, 76, 96, 8BC)
-    layer40 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer32) #(1, 38, 48, 8BC)
-    layer41 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer40)) #(1, 36, 46, 16BC)
-    layer42 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer41)) #(1, 34, 44, 16BC)
-    layer32_cropped = tf.keras.layers.Cropping2D(cropping=((4, 4), (4, 4)))(layer32) #(1, 68, 88, 8BC)
-    layer42_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer42) #(1, 68, 88, 16BC)
-    layer42_conved22 = tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(2, 2), padding="same")(layer42_upsample) #(1, 68, 88, 8BC)
-    layer50 = tf.keras.layers.Concatenate(axis=1)((layer32_cropped, layer42_conved22)) #(1, 68, 88, 16BC)
-    layer51 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer50)) #(1, 66, 86, 8BC)
-    layer52 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer51)) #(1, 64, 84, 8BC)
-    layer22_cropped = tf.keras.layers.Cropping2D(cropping=((16, 16), (16, 16)))(layer22) #(1, 128, 168, 4BC)
-    layer52_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer52) #(1, 128, 168, 8BC)
-    layer52_conved22 = tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(2, 2), padding="same")(layer52_upsample) #(1, 128, 168, 4BC)
-    layer60 = tf.keras.layers.Concatenate(axis=1)((layer22_cropped, layer52_conved22)) #(1, 128, 168, 8BC)
-    layer61 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer60)) #(1, 126, 166, 4BC)
-    layer62 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer61)) #(1, 124, 164, 4BC)
-    layer12_cropped = tf.keras.layers.Cropping2D(cropping=((40, 40), (40, 40)))(layer12) #(1, 248, 328, 2BC)
-    layer62_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer62) #(1, 248, 328, 4BC)
-    layer62_conved22 = tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(2, 2), padding="same")(layer62_upsample) #(1, 248, 328, 2BC)
-    layer70 = tf.keras.layers.Concatenate(axis=1)((layer12_cropped, layer62_conved22)) #(1, 248, 328, 4BC)
-    layer71 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer70)) #(1, 246, 326, 2BC)
-    layer72 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer71)) #(1, 244, 324, 2BC)
-    layer02_cropped = tf.keras.layers.Cropping2D(cropping=((88, 88), (88, 88)))(layer02) #(1, 488, 648, BC)
-    layer72_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer72) #(1, 488, 648, 2BC)
-    layer72_conved22 = tf.keras.layers.Conv2D(filters=BC, kernel_size=(2, 2), padding="same")(layer72_upsample) #(1, 488, 648, BC)
-    layer80 = tf.keras.layers.Concatenate(axis=1)((layer02_cropped, layer72_conved22)) #(1, 488, 648, 2BC)
-    layer81 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer80)) #(1, 484, 644, BC)
-    layer82 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer81)) #(1, 480, 640, BC)
-    output_tensor = tf.squeeze(tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82)) #(480, 640, 3)
+    layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 4)
+    layer01 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer00)) #(B, 666, 826, BC)
+    layer02 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer01)) #(B, 664, 824, BC)
+    layer10 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer02) #(B, 332, 412, BC)
+    layer11 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer10)) #(B, 330, 410, 2BC)
+    layer12 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer11)) #(B, 328, 408, 2BC)
+    layer20 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer12) #(B, 164, 204, 2BC)
+    layer21 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer20)) #(B, 162, 202, 4BC)
+    layer22 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer21)) #(B, 160, 200, 4BC)
+    layer30 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer22) #(B, 80, 100, 4BC)
+    layer31 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer30)) #(B, 78, 98, 8BC)
+    layer32 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer31)) #(B, 76, 96, 8BC)
+    layer40 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer32) #(B, 38, 48, 8BC)
+    layer41 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer40)) #(B, 36, 46, 16BC)
+    layer42 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer41)) #(B, 34, 44, 16BC)
+    layer32_cropped = tf.keras.layers.Cropping2D(cropping=((4, 4), (4, 4)))(layer32) #(B, 68, 88, 8BC)
+    layer42_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer42) #(B, 68, 88, 16BC)
+    layer42_conved22 = tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(2, 2), padding="same")(layer42_upsample) #(B, 68, 88, 8BC)
+    layer50 = tf.keras.layers.Concatenate(axis=-1)((layer32_cropped, layer42_conved22)) #(B, 68, 88, 16BC)
+    layer51 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer50)) #(B, 66, 86, 8BC)
+    layer52 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer51)) #(B, 64, 84, 8BC)
+    layer22_cropped = tf.keras.layers.Cropping2D(cropping=((16, 16), (16, 16)))(layer22) #(B, 128, 168, 4BC)
+    layer52_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer52) #(B, 128, 168, 8BC)
+    layer52_conved22 = tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(2, 2), padding="same")(layer52_upsample) #(B, 128, 168, 4BC)
+    layer60 = tf.keras.layers.Concatenate(axis=-1)((layer22_cropped, layer52_conved22)) #(B, 128, 168, 8BC)
+    layer61 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer60)) #(B, 126, 166, 4BC)
+    layer62 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer61)) #(B, 124, 164, 4BC)
+    layer12_cropped = tf.keras.layers.Cropping2D(cropping=((40, 40), (40, 40)))(layer12) #(B, 248, 328, 2BC)
+    layer62_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer62) #(B, 248, 328, 4BC)
+    layer62_conved22 = tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(2, 2), padding="same")(layer62_upsample) #(B, 248, 328, 2BC)
+    layer70 = tf.keras.layers.Concatenate(axis=-1)((layer12_cropped, layer62_conved22)) #(B, 248, 328, 4BC)
+    layer71 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer70)) #(B, 246, 326, 2BC)
+    layer72 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer71)) #(B, 244, 324, 2BC)
+    layer02_cropped = tf.keras.layers.Cropping2D(cropping=((88, 88), (88, 88)))(layer02) #(B, 488, 648, BC)
+    layer72_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer72) #(B, 488, 648, 2BC)
+    layer72_conved22 = tf.keras.layers.Conv2D(filters=BC, kernel_size=(2, 2), padding="same")(layer72_upsample) #(B, 488, 648, BC)
+    layer80 = tf.keras.layers.Concatenate(axis=-1)((layer02_cropped, layer72_conved22)) #(B, 488, 648, 2BC)
+    layer81 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer80)) #(B, 484, 644, BC)
+    layer82 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer81)) #(B, 480, 640, BC)
+    output_tensor = tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82) #(B, 480, 640, 3)
 
-    return input_tensor, output_tensor #(H, W, 4), (H, W, 3)
+    return input_tensor, output_tensor #(B, H, W, 4), (B, H, W, 3)
 
     # # Input layer
     # # (B, 20000, 3)
@@ -286,6 +285,7 @@ class Unet(tf.keras.models.Model):
 
         # define trackers
         self.total_loss_tracker = tf.keras.metrics.Mean(name='total_loss')
+        self.accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy')
 
     @property
     def metrics(self):
@@ -295,20 +295,21 @@ class Unet(tf.keras.models.Model):
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
         metrics = [
-            self.total_loss_tracker]
+            self.total_loss_tracker,
+            self.accuracy_tracker]
         return metrics
 
     def train_step(self, data):
         # unpack data
-        RGBD_normalized, gt_segmap_onehot = data #(H, W, 4), (H, W, 3)
+        RGBD_normalized, gt_segmap_onehot = data #(B=1, H, W, 4), (B=1, H, W, 3)
 
         # get gradient
         with tf.GradientTape() as tape:
             # get network forward output
-            output_probs_tensor = self(RGBD_normalized, training=True) #(H, W, 3)
-            out_softmax = tf.nn.softmax(output_probs_tensor) #(H, W, 3)
+            output_tensor = self(RGBD_normalized, training=True) #(B=1, H, W, 3)
+            logit = tf.nn.softmax(output_tensor) #(B=1, H, W, 3)
 
-            CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, out_softmax) #(H, W)
+            CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, logit) #(B=1, H, W)
             total_loss = tf.reduce_sum(CEvals) #scalar
 
         # udate gradient
@@ -317,10 +318,13 @@ class Unet(tf.keras.models.Model):
         
         # update loss and metric trackers
         self.total_loss_tracker.update_state(total_loss)
+        self.accuracy_tracker.update_state(y_true=tf.argmax(gt_segmap_onehot, axis=-1),
+                                           y_pred=tf.argmax(logit, axis=-1))
 
         # pack return
         ret = {
-            'total_loss': self.total_loss_tracker.result()}
+            'total_loss': self.total_loss_tracker.result(),
+            'accuracy': self.accuracy_tracker.result()}
         return ret
 
     def test_step(self, data):
@@ -329,15 +333,18 @@ class Unet(tf.keras.models.Model):
 
         # get netwokr output
         output_probs_tensor = self(RGBD_normalized, training=True) #(H, W, 3)
-        out_softmax = tf.nn.softmax(output_probs_tensor) #(H, W, 3)
+        logit = tf.nn.softmax(output_probs_tensor) #(H, W, 3)
 
-        CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, out_softmax) #(H, W)
+        CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, logit) #(H, W)
         total_loss = tf.reduce_sum(CEvals) #scalar
 
         # update loss and metric trackers
         self.total_loss_tracker.update_state(total_loss)
+        self.accuracy_tracker.update_state(y_true=tf.argmax(gt_segmap_onehot, axis=-1),
+                                           y_pred=tf.argmax(logit, axis=-1))
 
         # pack return
         ret = {
-            'total_loss': self.total_loss_tracker.result()}
+            'total_loss': self.total_loss_tracker.result(),
+            'accuracy': self.accuracy_tracker.result()}
         return ret
