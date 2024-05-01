@@ -490,7 +490,7 @@ class SceneDatasetGenerator():
         try:
             scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses = table_scene.arrange(num_objects, self._max_iterations)
             self.save_scene(scene_id, scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses)
-            print(f"Created {scene_id} with {len(obj_meshes) - 1} objects, time taken {time.time()-start_time:.2f}secs ({len(os.listdir(self._save_dir)) - self._initial_file_num}/{self._number_of_scenes_generating})")
+            print(f"Created {scene_id} with {len(obj_meshes) - 1} objects, time taken {time.time()-start_time:.2f}secs ({(len(os.listdir(self._save_dir)) - self._initial_file_num)//2}/{self._number_of_scenes_generating})")
             return True
         
         except KeyboardInterrupt:

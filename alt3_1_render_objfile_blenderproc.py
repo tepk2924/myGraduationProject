@@ -7,9 +7,12 @@ import math
 import os
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--obj_file', type=str)
+parser.add_argument('--filepath', type=str)
+parser.add_argument('--target_folder', type=str)
 args = parser.parse_args()
-filepath:str = args.obj_file
+
+filepath = args.filepath
+target_folder = args.target_folder
 
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
@@ -48,8 +51,8 @@ light.set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.
 light.set_energy(500 * 2**(4*random.random()))
 
 K = np.array([[616.36529541, 0, 310.25881958],
-              [0, 616.20294189, 236.59980774],
-              [0, 0, 1]])
+            [0, 616.20294189, 236.59980774],
+            [0, 0, 1]])
 bproc.camera.set_intrinsics_from_K_matrix(K, 640, 480)
 
 deg = math.pi/180
@@ -78,25 +81,19 @@ points = bproc.camera.pointcloud_from_depth(depth)
 points = points.reshape(-1, 3)
 points = np.float32(points)
 
-bproc.renderer.enable_segmentation_output(map_by=["category_id"])
-bproc.renderer.enable_depth_output(activate_antialiasing=False)
 
 grasps_tf[:, :3, 3] /= 1000
 rotation = np.array([[0, 1, 0],
-                     [-1, 0, 0],
-                     [0, 0, 1]], dtype=float)
+                    [-1, 0, 0],
+                    [0, 0, 1]], dtype=float)
 grasps_tf[:, :3, :] = np.matmul(rotation, grasps_tf[:, :3, :])
 
-# A = np.tile(np.array([0, 0, 0.03, 1], dtype=float), (len(grasps_tf), 1)).T
-# for i in range(len(grasps_tf)):
-#     A[:, i] = grasps_tf[i, :, :]@A[:, i]
-# A = A[:3].T
-# grasp_cloud = bproc.object.create_from_point_cloud(grasps_tf[:, :3, 3], "grasps", add_geometry_nodes_visualization=True)
-# grasp_cloud_2 = bproc.object.create_from_point_cloud(A, "grasps2", add_geometry_nodes_visualization=True)
-
+bproc.renderer.enable_segmentation_output(map_by=["category_id"])
+bproc.renderer.enable_depth_output(activate_antialiasing=False)
 data = bproc.renderer.render()
 data["pc"] = [points]
 data["grasps_tf"] = [grasps_tf]
 data["grasps_scores"] = [grasps_scores]
 
-bproc.writer.write_hdf5("./hdf5output", data)
+bproc.writer.write_hdf5(target_folder, data, True)
+bproc.clean_up(True)

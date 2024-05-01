@@ -66,7 +66,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         gt_segmap_onehot = tf.convert_to_tensor(gt_segmap_onehot, dtype=tf.float32)
         RGBD_normalized = tf.convert_to_tensor(RGBD_normalized, dtype=tf.float32)
 
-        return RGBD_normalized, gt_segmap_onehot
+        return RGBD_normalized, gt_segmap_onehot #(H, W, 4), (H, W, 3)
 
     def __len__(self):
         return self.num_of_scenes_3d

@@ -65,7 +65,7 @@ def build_unet_graph(BC: int):
     layer82 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer81)) #(1, 480, 640, BC)
     output_tensor = tf.squeeze(tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82)) #(480, 640, 3)
 
-    return input_tensor, output_tensor
+    return input_tensor, output_tensor #(H, W, 4), (H, W, 3)
 
     # # Input layer
     # # (B, 20000, 3)
@@ -159,125 +159,122 @@ def build_unet_graph(BC: int):
 
     # return input_pc, (output_pc, grasp_score, grasp_approach)
 
+# @tf.function
+# def knn_point(k, xyz1, xyz2):
+#     #idx = tf.constanct(tf.int32, shape=(None,2048))
 
-#TODO: 나머지 loss 함수 작성하고 train 코드도 재작성하고 가상 데이터 생성하고 테스트 해보기. 또한 loss 함수를 변경한다거나 padding 방식도 변경해보기.
-
-@tf.function
-def knn_point(k, xyz1, xyz2):
-    #idx = tf.constanct(tf.int32, shape=(None,2048))
-
-    # This did not work for me so changed
-    b = tf.shape(xyz1)[0]
-    n = tf.shape(xyz1)[1]
-    c = tf.shape(xyz1)[2]
-    m = tf.shape(xyz2)[1]
+#     # This did not work for me so changed
+#     b = tf.shape(xyz1)[0]
+#     n = tf.shape(xyz1)[1]
+#     c = tf.shape(xyz1)[2]
+#     m = tf.shape(xyz2)[1]
 
 
-    xyz1 = tf.tile(tf.reshape(xyz1, (b, 1, n, c)), [1, m, 1, 1])
-    xyz2 = tf.tile(tf.reshape(xyz2, (b, m, 1, c)), [1, 1, n, 1])
-    dist = tf.reduce_sum((xyz1-xyz2)**2, -1)
+#     xyz1 = tf.tile(tf.reshape(xyz1, (b, 1, n, c)), [1, m, 1, 1])
+#     xyz2 = tf.tile(tf.reshape(xyz2, (b, m, 1, c)), [1, 1, n, 1])
+#     dist = tf.reduce_sum((xyz1-xyz2)**2, -1)
 
-    outi, out = select_top_k(k, dist)
-    idx = tf.slice(outi, [0, 0, 0], [-1, -1, k])
-    val = tf.slice(out, [0, 0, 0], [-1, -1, k])
+#     outi, out = select_top_k(k, dist)
+#     idx = tf.slice(outi, [0, 0, 0], [-1, -1, k])
+#     val = tf.slice(out, [0, 0, 0], [-1, -1, k])
 
-    return val, idx
-
-
-@tf.function
-def score_loss_fn(gt_scores, pred_scores, max_k=512):
-    """
-    Calculate score loss given ground truth and predicted scores. 
-    The inputs must be of dimension [batch_size, num_points].
-    --------------
-    Args:
-        gt_scores (tf.Tensor) : Ground truth scores. (B, N)
-        pred_scores (tf.Tensor) : Predicted scores. (B, N)
-    --------------
-    Returns:
-        loss (tf.Tensor) : Binary crossentropy
-    """
-    # Expand dimensions
-    gt_scores = tf.expand_dims(gt_scores, axis=-1)
-    pred_scores = tf.expand_dims(pred_scores, axis=-1)
-    mask = tf.where(gt_scores != -1, 1, 0)
-
-    # Calculate elementvise binary cross entropy loss
-    bce = tf.keras.losses.BinaryCrossentropy(
-        from_logits=False, reduction=tf.keras.losses.Reduction.NONE)
-    loss = bce(gt_scores, pred_scores, sample_weight=mask)
-    # Get the indeces for the sorted losses
-    sort_i = tf.argsort(loss, axis=1, direction='DESCENDING')
-
-    #tepk2924 수정 : batch 1개일 때와 batch가 2개 이상일 때와 같은 동작을 하도록 코드 수정.
-    # Use the indeces to sort input data
-
-    #gt_scores = tf.squeeze(gt_scores)
-    gt_scores = tf.squeeze(gt_scores, axis=-1)
-    gt_scores = tf.gather(gt_scores, sort_i, batch_dims=-1)
-
-    #pred_scores = tf.squeeze(pred_scores)
-    pred_scores = tf.squeeze(pred_scores, axis=-1)
-    pred_scores = tf.gather(pred_scores, sort_i, batch_dims=-1)
-
-    # Calculate the loss for top k points
-    loss = tf.gather(loss, sort_i, batch_dims=-1)
-    loss = tf.reduce_mean(loss[:, :max_k])
-    return loss
+#     return val, idx
 
 
-@tf.function
-def approach_loss_fn(gt_approach, pred_approach):
-    """
-    Calculate the loss for the approach vectors.
-    The inputs must be of dimension (B, M, 3).
-    Where m are only the predicted points where the ground truth for those points are True !!!!
-    --------------
-    Args:
-        gt_approach (tf.Tensor) : Ground truth approach vectors. (B, M, 3)
-        pred_approach (tf.Tensor) : Predicted approach vectors. (B, M, 3)
-    --------------
-    Returns:
-        loss (tf.Tensor): CosineSimilarity
-    """
-    #TODO : 가끔씩 NaN을 내보내서 전체 학습 과정을 방해하는 경우가 있음.
-    loss = tf.reduce_mean(
-        tf.keras.losses.cosine_similarity(gt_approach, pred_approach)+1)
+# @tf.function
+# def score_loss_fn(gt_scores, pred_scores, max_k=512):
+#     """
+#     Calculate score loss given ground truth and predicted scores. 
+#     The inputs must be of dimension [batch_size, num_points].
+#     --------------
+#     Args:
+#         gt_scores (tf.Tensor) : Ground truth scores. (B, N)
+#         pred_scores (tf.Tensor) : Predicted scores. (B, N)
+#     --------------
+#     Returns:
+#         loss (tf.Tensor) : Binary crossentropy
+#     """
+#     # Expand dimensions
+#     gt_scores = tf.expand_dims(gt_scores, axis=-1)
+#     pred_scores = tf.expand_dims(pred_scores, axis=-1)
+#     mask = tf.where(gt_scores != -1, 1, 0)
+
+#     # Calculate elementvise binary cross entropy loss
+#     bce = tf.keras.losses.BinaryCrossentropy(
+#         from_logits=False, reduction=tf.keras.losses.Reduction.NONE)
+#     loss = bce(gt_scores, pred_scores, sample_weight=mask)
+#     # Get the indeces for the sorted losses
+#     sort_i = tf.argsort(loss, axis=1, direction='DESCENDING')
+
+#     #tepk2924 수정 : batch 1개일 때와 batch가 2개 이상일 때와 같은 동작을 하도록 코드 수정.
+#     # Use the indeces to sort input data
+
+#     #gt_scores = tf.squeeze(gt_scores)
+#     gt_scores = tf.squeeze(gt_scores, axis=-1)
+#     gt_scores = tf.gather(gt_scores, sort_i, batch_dims=-1)
+
+#     #pred_scores = tf.squeeze(pred_scores)
+#     pred_scores = tf.squeeze(pred_scores, axis=-1)
+#     pred_scores = tf.gather(pred_scores, sort_i, batch_dims=-1)
+
+#     # Calculate the loss for top k points
+#     loss = tf.gather(loss, sort_i, batch_dims=-1)
+#     loss = tf.reduce_mean(loss[:, :max_k])
+#     return loss
+
+
+# @tf.function
+# def approach_loss_fn(gt_approach, pred_approach):
+#     """
+#     Calculate the loss for the approach vectors.
+#     The inputs must be of dimension (B, M, 3).
+#     Where m are only the predicted points where the ground truth for those points are True !!!!
+#     --------------
+#     Args:
+#         gt_approach (tf.Tensor) : Ground truth approach vectors. (B, M, 3)
+#         pred_approach (tf.Tensor) : Predicted approach vectors. (B, M, 3)
+#     --------------
+#     Returns:
+#         loss (tf.Tensor): CosineSimilarity
+#     """
+#     #TODO : 가끔씩 NaN을 내보내서 전체 학습 과정을 방해하는 경우가 있음.
+#     loss = tf.reduce_mean(
+#         tf.keras.losses.cosine_similarity(gt_approach, pred_approach)+1)
     
-    if tf.math.is_nan(loss):
-        loss = tf.convert_to_tensor(0.0, dtype=float)
-    return loss
+#     if tf.math.is_nan(loss):
+#         loss = tf.convert_to_tensor(0.0, dtype=float)
+#     return loss
 
 
-@tf.function
-def loss_fn(gt_scores, pred_scores, gt_approach, pred_approach, max_k=256):
-    """
-    Given formatted ground truth boxes and network output, calculate score and approach loss.
-    --------------
-    Args:
-        gt_scores (tf.Tensor) : Ground truth scores. (B, N)
-        pred_scores (tf.Tensor) : Predicted scores. (B, N)
-        gt_approach (tf.Tensor) : Ground truth approach vectors. (B, N, 3)
-        pred_approach (tf.Tensor) : Predicted approach vectors. (B, N, 3)
-    Keyword Args:
-        max_k (int) : Amount of points to use for the score loss.
-    --------------
-    Returns:
-        l_score (tf.Tensor) : Score loss value
-        l_approach (tf.Tensor) : Approach loss value
-    """
+# @tf.function
+# def loss_fn(gt_scores, pred_scores, gt_approach, pred_approach, max_k=256):
+#     """
+#     Given formatted ground truth boxes and network output, calculate score and approach loss.
+#     --------------
+#     Args:
+#         gt_scores (tf.Tensor) : Ground truth scores. (B, N)
+#         pred_scores (tf.Tensor) : Predicted scores. (B, N)
+#         gt_approach (tf.Tensor) : Ground truth approach vectors. (B, N, 3)
+#         pred_approach (tf.Tensor) : Predicted approach vectors. (B, N, 3)
+#     Keyword Args:
+#         max_k (int) : Amount of points to use for the score loss.
+#     --------------
+#     Returns:
+#         l_score (tf.Tensor) : Score loss value
+#         l_approach (tf.Tensor) : Approach loss value
+#     """
 
-    # Calculate score loss
-    l_score = score_loss_fn(gt_scores, pred_scores, 512)
-    # Filter only grasps that should be positive
-    mask = tf.where(gt_scores == 1, True, False)
-    gt_approach = tf.boolean_mask(gt_approach, mask)
-    pred_approach = tf.boolean_mask(pred_approach, mask)
+#     # Calculate score loss
+#     l_score = score_loss_fn(gt_scores, pred_scores, 512)
+#     # Filter only grasps that should be positive
+#     mask = tf.where(gt_scores == 1, True, False)
+#     gt_approach = tf.boolean_mask(gt_approach, mask)
+#     pred_approach = tf.boolean_mask(pred_approach, mask)
 
-    # Calculate approach loss
-    l_approach = approach_loss_fn(gt_approach, pred_approach)
+#     # Calculate approach loss
+#     l_approach = approach_loss_fn(gt_approach, pred_approach)
 
-    return l_score, l_approach
+#     return l_score, l_approach
 
 
 class Unet(tf.keras.models.Model):
@@ -288,11 +285,6 @@ class Unet(tf.keras.models.Model):
         super(Unet, self).compile(optimizer=optimizer, run_eagerly=run_eagerly)
 
         # define trackers
-        self.grasp_score_acc_tracker = tf.keras.metrics.BinaryAccuracy(name='grasp_sc_acc')
-        self.grasp_score_precision_tracker = tf.keras.metrics.Precision(thresholds=0.5, name='grasp_sc_pcs')
-        self.grasp_score_loss_tracker = tf.keras.metrics.Mean(name='grasp_sc_loss')
-        self.grasp_app_mae_tracker = tf.keras.metrics.MeanAbsoluteError(name='grasp_app_mae')
-        self.grasp_app_loss_trakcer = tf.keras.metrics.Mean(name='grasp_app_loss')
         self.total_loss_tracker = tf.keras.metrics.Mean(name='total_loss')
 
     @property
@@ -303,116 +295,49 @@ class Unet(tf.keras.models.Model):
         # If you don't implement this property, you have to call
         # `reset_states()` yourself at the time of your choosing.
         metrics = [
-            self.grasp_score_acc_tracker,
-            self.grasp_score_precision_tracker,
-            self.grasp_score_loss_tracker,
-            self.grasp_app_mae_tracker,
-            self.grasp_app_loss_trakcer,
             self.total_loss_tracker]
         return metrics
 
     def train_step(self, data):
         # unpack data
-        input_pc, (score_target, approach_target) = data
+        RGBD_normalized, gt_segmap_onehot = data #(H, W, 4), (H, W, 3)
 
         # get gradient
         with tf.GradientTape() as tape:
             # get network forward output
-            output_pc, score_output, approach_output = self(input_pc, training=True)
+            output_probs_tensor = self(RGBD_normalized, training=True) #(H, W, 3)
+            out_softmax = tf.nn.softmax(output_probs_tensor) #(H, W, 3)
 
-            # fromat ground truth boxes
-            indeces_all = tf.squeeze(knn_point(1, input_pc, output_pc)[1])
-
-            #tepk2924 조한 수정 : 차원 맞추는 코드 삽입.
-            indeces_all = tf.expand_dims(indeces_all, 0)
-
-            indeces_all = tf.ensure_shape(
-                indeces_all, (None, 2048), name=None
-            )
-            # Match output points and original PC points
-            score_target = tf.gather(
-                score_target, indeces_all, axis=1, batch_dims=1)
-            approach_target = tf.gather(
-                approach_target, indeces_all, axis=1, batch_dims=1)
-
-            # get loss
-            score_loss, approach_loss = loss_fn(score_target, score_output,
-                                                approach_target, approach_output)
-            
-            #tepk2924 조한 : 굳이 loss의 비율을 1대 1로? 여러번의 trial and error로 알맞은 비율을 찾는 게 중요할 지도 모르겠군.
-            total_loss = score_loss + approach_loss
+            CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, out_softmax) #(H, W)
+            total_loss = tf.reduce_sum(CEvals) #scalar
 
         # udate gradient
         grads = tape.gradient(total_loss, self.trainable_variables)
         self.optimizer.apply_gradients(zip(grads, self.trainable_variables))
-
-        mask_scores = tf.where(score_target != -1, 1, 0)
-        mask_scores_exp = tf.expand_dims(mask_scores, -1)
         
         # update loss and metric trackers
-        self.grasp_score_acc_tracker.update_state(
-            score_target, score_output, sample_weight=mask_scores_exp)
-        self.grasp_score_precision_tracker.update_state(
-            score_target, score_output, sample_weight=mask_scores_exp)
-        self.grasp_score_loss_tracker.update_state(score_loss)
-        self.grasp_app_mae_tracker.update_state(approach_target, approach_output)
-        self.grasp_app_loss_trakcer.update_state(approach_loss)
         self.total_loss_tracker.update_state(total_loss)
 
         # pack return
         ret = {
-            'score_acc': self.grasp_score_acc_tracker.result(),
-            'score_prec': self.grasp_score_precision_tracker.result(),
-            'score_loss': self.grasp_score_loss_tracker.result(),
-            'app_mae': self.grasp_app_mae_tracker.result(),
-            'app_loss': self.grasp_app_loss_trakcer.result(),
             'total_loss': self.total_loss_tracker.result()}
         return ret
 
     def test_step(self, data):
         # unpack data
-        input_pc, (score_target, approach_target) = data
+        RGBD_normalized, gt_segmap_onehot = data #(H, W, 4), (H, W, 3)
 
         # get netwokr output
-        output_pc, score_output, approach_output = self(input_pc, training=False)
+        output_probs_tensor = self(RGBD_normalized, training=True) #(H, W, 3)
+        out_softmax = tf.nn.softmax(output_probs_tensor) #(H, W, 3)
 
-        # fromat ground truth boxes
-        indeces_all = tf.squeeze(knn_point(1, input_pc, output_pc)[1])
+        CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, out_softmax) #(H, W)
+        total_loss = tf.reduce_sum(CEvals) #scalar
 
-        #tepk2924 조한 수정 : 차원 맞추는 코드 삽입.
-        indeces_all = tf.expand_dims(indeces_all, 0)
-
-        indeces_all = tf.ensure_shape(
-            indeces_all, (None, 2048), name=None
-        )
-        # Match output points and original PC points
-        score_target = tf.gather(
-            score_target, indeces_all, axis=1, batch_dims=1)
-        approach_target = tf.gather(
-            approach_target, indeces_all, axis=1, batch_dims=1)
-
-        # get loss
-        score_loss, approach_loss = loss_fn(score_target, score_output,
-                                            approach_target, approach_output)
-        total_loss = score_loss + approach_loss
-
-        mask_scores = tf.where(score_target != -1, 1, 0)
-        mask_scores = tf.expand_dims(mask_scores, -1)
         # update loss and metric trackers
-        self.grasp_score_acc_tracker.update_state(score_target, score_output, sample_weight=mask_scores)
-        self.grasp_score_precision_tracker.update_state(
-            score_target, score_output, sample_weight=mask_scores)
-        self.grasp_score_loss_tracker.update_state(score_loss)
-        self.grasp_app_mae_tracker.update_state(approach_target, approach_output)
-        self.grasp_app_loss_trakcer.update_state(approach_loss)
         self.total_loss_tracker.update_state(total_loss)
 
         # pack return
         ret = {
-            'score_acc': self.grasp_score_acc_tracker.result(),
-            'score_prec': self.grasp_score_precision_tracker.result(),
-            'score_loss': self.grasp_score_loss_tracker.result(),
-            'app_mae': self.grasp_app_mae_tracker.result(),
-            'app_loss': self.grasp_app_loss_trakcer.result(),
             'total_loss': self.total_loss_tracker.result()}
         return ret

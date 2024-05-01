@@ -22,8 +22,8 @@ BlenderProc
 BlenderProc/
 objscenes_generated
 objscenes_generated/
-hdf5output
-hdf5output/
+hdf5scenes_generated
+hdf5scenes_generated/
 texture_dataset
 texture_dataset/
 test.py
