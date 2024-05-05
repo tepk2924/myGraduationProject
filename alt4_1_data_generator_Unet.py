@@ -40,7 +40,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         """
 
         # Generate batch data
-        scene_name = self.scene_name_list[self.scene_order[idx]]
+        scene_name = f"{self.scene_order[idx]}.hdf5"
         with h5py.File(os.path.join(self.data_dir, scene_name), "r") as f:
             segmap = np.array(f["category_id_segmaps"]) #(image_height, image_width), np.int64
             colors = np.array(f["colors"]) #(image_height, image_width, 3) np.uint8

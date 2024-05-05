@@ -7,15 +7,13 @@ import random
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
+import h5py
 
 from alt4_1_data_generator_Unet import DataGenerator
 from alt4_2_unet import Unet, build_unet_graph
 
 #HyperParameters
 BC = 32
-LR = 0.001
-DECAY = 5.0e-05
-EPOCHS = 20
 
 if __name__ == '__main__':
     # solve tensorflow memory issue
@@ -33,7 +31,8 @@ if __name__ == '__main__':
     #################
     # Load Datatset #
     #################
-    test_dataset = DataGenerator(input("Test hdf5 파일이 들어있는 폴더의 디렉토리 입력 : "))
+    target_hdf5folder = input("Test hdf5 파일이 들어있는 폴더의 디렉토리 입력 : ")
+    test_dataset = DataGenerator(target_hdf5folder)
 
     ##############
     # Load Model #
@@ -61,8 +60,11 @@ if __name__ == '__main__':
     # predict #
     ###########
     # evaluate the model
-    scene_number = random.randint(0, len(test_dataset) - 1)
+    scene_number = int(input("hdf5scene 번호 입력 : "))
     RGBD_normalized, gt_segmap_onehot = test_dataset[scene_number]
+
+    with h5py.File(os.path.join(target_hdf5folder, f"{scene_number}.hdf5"), "r") as f:
+        original_image = np.array(f["colors"])
 
     output_tensor = model(RGBD_normalized)
     logit = tf.nn.softmax(output_tensor)
@@ -75,12 +77,17 @@ if __name__ == '__main__':
     gt_segmap_RGB = convert_RGB[gt_segmap]
     pred_segmap_RGB = convert_RGB[pred_segmap]
 
-    plt.subplot(1, 2, 1)
+    plt.subplot(1, 3, 1)
+    plt.imshow(original_image)
+    plt.axis("off")
+    plt.title("original_image")
+
+    plt.subplot(1, 3, 2)
     plt.imshow(gt_segmap_RGB)
     plt.axis("off")
     plt.title("gt_segmap")
 
-    plt.subplot(1, 2, 2)
+    plt.subplot(1, 3, 3)
     plt.imshow(pred_segmap_RGB)
     plt.axis("off")
     plt.title("pred_segmap")
