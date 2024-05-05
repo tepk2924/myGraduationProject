@@ -14,7 +14,7 @@ from alt4_2_unet import Unet, build_unet_graph
 BC = 32
 LR = 0.001
 DECAY = 5.0e-05
-EPOCHS = 40
+EPOCHS = 60
 
 if __name__ == '__main__':
     ROOT_DIR = os.path.dirname(os.path.abspath(__file__))
