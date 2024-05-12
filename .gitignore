@@ -27,5 +27,5 @@ hdf5scenes_generated/
 texture_dataset
 texture_dataset/
 test.py
-checkpoints_Unet
-checkpoints_Unet/
+unet_checkpoints
+unet_checkpoints/

@@ -1,0 +1,4 @@
+BC: 64
+LR: 0.001
+DECAY: 5.0e-05
+EPOCHS: 100

@@ -2,45 +2,37 @@
 # -*- coding: utf-8 -*-
 import os
 import glob
-import random
+import yaml
+import importlib
 
 import numpy as np
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import h5py
 
-from alt4_1_data_generator_Unet import DataGenerator
-from alt4_2_unet import Unet, build_unet_graph
-
-#HyperParameters
-BC = 32
-
 if __name__ == '__main__':
     # solve tensorflow memory issue
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True) # allow memory growth
 
-    saved_model_dir = input("저장된 모델의 디렉토리 입력 : ")
+    saved_model_dir = input("저장된 모델의 디렉토리 입력 (unet_checkpoints 폴더 안에 있어야 함.): ")
+    saved_model_name = os.path.basename(saved_model_dir)
     target_epoch = int(input("대상 Epoch 입력 : "))
 
     if not os.path.isdir(saved_model_dir):
         raise ValueError('Model directory does not exist: {}'.format(saved_model_dir))
     log_dir = os.path.join(saved_model_dir, "logs")
 
-
-    #################
-    # Load Datatset #
-    #################
     target_hdf5folder = input("Test hdf5 파일이 들어있는 폴더의 디렉토리 입력 : ")
-    test_dataset = DataGenerator(target_hdf5folder)
+    arch = importlib.import_module(f"unet_checkpoints.{saved_model_name}.unet_architecture")
 
-    ##############
-    # Load Model #
-    ##############
-    # build model
+    test_dataset = arch.DataGenerator(target_hdf5folder)
 
-    inputs, outputs = build_unet_graph(BC)
-    model = Unet(inputs, outputs)
+    with open(input("불러올 하이퍼파라미터 : "), 'r') as f:
+        hyperparameters = yaml.safe_load(f)
+
+    inputs, outputs = arch.build_unet_graph(hyperparameters)
+    model = arch.Unet(inputs, outputs)
 
     weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
     weight_filelist.sort()
@@ -60,16 +52,33 @@ if __name__ == '__main__':
     # predict #
     ###########
     # evaluate the model
+
+
     scene_number = int(input("hdf5scene 번호 입력 : "))
-    RGBD_normalized, gt_segmap_onehot = test_dataset[scene_number]
+
+    RGBDE_normalized, gt_segmap_onehot = test_dataset[scene_number]
 
     with h5py.File(os.path.join(target_hdf5folder, f"{scene_number}.hdf5"), "r") as f:
         original_image = np.array(f["colors"])
 
-    output_tensor = model(RGBD_normalized)
-    logit = tf.nn.softmax(output_tensor)
-    gt_segmap=tf.squeeze(tf.argmax(gt_segmap_onehot, axis=-1), axis=0).numpy()
-    pred_segmap=tf.squeeze(tf.argmax(logit, axis=-1), axis=0).numpy()
+    logit = model(RGBDE_normalized)
+    pred_segmap_prob = tf.nn.softmax(logit)
+
+    total_loss = tf.reduce_mean(tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, pred_segmap_prob))
+
+    gt = tf.argmax(gt_segmap_onehot, axis=-1)
+    pred = tf.argmax(pred_segmap_prob, axis=-1)
+
+    accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy')
+    effective_accuracy_tracker = tf.keras.metrics.Accuracy(name='effective_accuracy')
+
+    accuracy = accuracy_tracker(y_true=gt, y_pred=pred)
+
+    mask = tf.where(gt >= 1, True, False)
+    effective_accuracy = effective_accuracy_tracker(y_true=tf.boolean_mask(gt, mask), y_pred=tf.boolean_mask(pred, mask))
+
+    gt_segmap=tf.squeeze(gt, axis=0).numpy()
+    pred_segmap=tf.squeeze(pred, axis=0).numpy()
     
     convert_RGB = np.array([[255, 0, 0],
                             [0, 255, 0],
@@ -92,4 +101,7 @@ if __name__ == '__main__':
     plt.axis("off")
     plt.title("pred_segmap")
 
+    plt.figtext(0.5, 0.01, f"{os.path.basename(saved_model_dir)}\n{target_epoch = }\n{scene_number = }\n{total_loss = :.3f}\n{accuracy = :.4f}\n{effective_accuracy = :.4f}", ha='center', va='bottom', fontsize=12)
+
+    plt.savefig(os.path.join(saved_model_dir, f"{os.path.basename(saved_model_dir)}_{target_epoch}Ep_datanum{scene_number}.png"))
     plt.show()
