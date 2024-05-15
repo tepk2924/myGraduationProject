@@ -33,13 +33,12 @@ if __name__ == '__main__':
             hyperparameters = yaml.safe_load(f)
         BC = hyperparameters["BC"]
         LR = hyperparameters["LR"]
-        DECAY = hyperparameters["DECAY"]
         EPOCHS = hyperparameters["EPOCHS"]
+        os.makedirs(os.path.join(model_dir, 'weights'))
         with open(os.path.join(model_dir, "hyperparameters.yml"), 'w') as f:
             yaml.safe_dump(hyperparameters, f)
         log_dir = os.path.join(model_dir, "logs")
 
-        os.makedirs(os.path.join(model_dir, 'weights'))
         shutil.copyfile(architecture_source_path, os.path.join(model_dir, "unet_architecture.py"))
         print("Directory: ", model_dir, ". Created")
 
@@ -56,7 +55,6 @@ if __name__ == '__main__':
     #         hyperparameters = yaml.safe_load(f)
     #     BC = hyperparameters["BC"]
     #     LR = hyperparameters["LR"]
-    #     DECAY = hyperparameters["DECAY"]
     #     EPOCHS = hyperparameters["EPOCHS"]
     #     init_epoch = int(input("시작 시의 Epoch 횟수 입력, -1 입력시 기존 Epoch 횟수에서 시작 : "))
     else:
@@ -76,14 +74,30 @@ if __name__ == '__main__':
     ##############
     # build model
 
-    inputs, outputs = arch.build_unet_graph(BC)
-    model = arch.Unet(inputs, outputs)
+    inputs, outputs = arch.build_unet_graph(hyperparameters)
+    model:tf.keras.models.Model = arch.Unet(inputs, outputs)
 
-    # compile model
-    lr_scheduler = tf.keras.optimizers.schedules.InverseTimeDecay(
-        initial_learning_rate=LR,
-        decay_steps=1,
-        decay_rate=DECAY)
+    # LR_SCHEDULE 설정
+    if "LR_SCHEDULE" in hyperparameters:
+        LR_SCHEDULE = hyperparameters["LR_SCHEDULE"]
+    else:
+        LR_SCHEDULE = "InverseTimeDecay"
+
+    if LR_SCHEDULE == "InverseTimeDecay":
+        lr_scheduler = tf.keras.optimizers.schedules.InverseTimeDecay(
+            initial_learning_rate=LR,
+            decay_steps=1,
+            decay_rate=hyperparameters["DECAY"])
+    elif LR_SCHEDULE == "CosineDecay":
+        lr_scheduler = tf.keras.optimizers.schedules.CosineDecay(
+            initial_learning_rate=LR,
+            decay_steps=1,
+            alpha=hyperparameters["ALPHA"])
+    elif LR_SCHEDULE == "Constant":
+        lr_scheduler = LR
+    else:
+        print("잘못된 하이퍼파라미터(LR_SCHEDULE)")
+        exit()
     model.compile(optimizer=tf.keras.optimizers.Adam(
         learning_rate=lr_scheduler))
 
@@ -113,7 +127,7 @@ if __name__ == '__main__':
         save_weights_only=False,
         monitor="val_total_loss",
         mode="min",
-        save_best_only=False)
+        save_best_only=hyperparameters["SAVE_BEST_ONLY"] if "SAVE_BEST_ONLY" in hyperparameters else False)
     tensorboard_callback = tf.keras.callbacks.TensorBoard(log_dir=log_dir,
                                                           histogram_freq=0,
                                                           profile_batch=0,

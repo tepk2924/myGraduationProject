@@ -41,14 +41,17 @@ for obj in objs:
     obj.add_material(mat)
 
 deg = math.pi/180
-theta = 2*math.pi*random.random()
-phi = 40*deg + (40*deg)*random.random()
-dist = 2.5 + 2.5*random.random()
+lights = []
 
-light = bproc.types.Light()
-light.set_type("POINT")
-light.set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
-light.set_energy(500 * 2**(4*random.random()))
+#광원 배치 : 1개부터 5개까지 랜덤
+for _ in range(random.randint(1, 5)):
+    theta = 2*math.pi*random.random()
+    phi = 70*deg + (15*deg)*random.random()
+    dist = 1.8 + 2.5*random.random()
+    lights.append(bproc.types.Light())
+    lights[-1].set_type("POINT")
+    lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
+    lights[-1].set_energy(250 + 250*random.random())
 
 K = np.array([[616.36529541, 0, 310.25881958],
             [0, 616.20294189, 236.59980774],

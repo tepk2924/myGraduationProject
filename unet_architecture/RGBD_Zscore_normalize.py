@@ -16,7 +16,7 @@ def build_unet_graph(hyperparameters:dict):
 
     --------------
     Args:
-        BC : hyperparameter, Basic Channels
+        hyperparameters : a dictionary containing some hyperparameters
     --------------
     Returns:
         input_tensor tf.Tensor : input data with 4 channels (batch_num, image_height: 480, image_width: 640, 4).
@@ -207,7 +207,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         RGBD_normalized[:, :, :3] = colors/255.
         depth_max = np.max(depth)
         depth_min = np.min(depth)
-        RGBD_normalized[:, :, 3] = (depth - depth_min)/(depth_max - depth_min)
+        RGBD_normalized[:, :, 3] = (depth - np.mean(depth)) / np.std(depth)
 
         onehot = np.array([[1, 0, 0],
                            [0, 1, 0],

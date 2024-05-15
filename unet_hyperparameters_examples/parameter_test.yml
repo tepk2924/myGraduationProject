@@ -1,4 +1,4 @@
 BC: 32
 LR: 0.001
-DECAY: 5.0e-05
 EPOCHS: 2
+DECAY: 5.0e-05

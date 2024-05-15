@@ -19,13 +19,13 @@ def build_unet_graph(hyperparameters:dict):
         hyperparameters : a dictionary containing some hyperparameters
     --------------
     Returns:
-        input_tensor tf.Tensor : input data with 5 channels (batch_num, image_height: 480, image_width: 640, 5).
+        input_tensor tf.Tensor : input data with 4 channels (batch_num, image_height: 480, image_width: 640, 4).
         output_tensor: tf.Tensor : output_tensor to be compared to gt (batch_num, image_height: 480, image_width: 640, 3)
     """
     BC = hyperparameters["BC"]
-    input_tensor = tf.keras.Input((480, 640, 5), batch_size=1) #(B, 480, 640, 5)
+    input_tensor = tf.keras.Input((480, 640, 4), batch_size=1) #(B, 480, 640, 4)
     relu = tf.keras.layers.ReLU()
-    layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 5)
+    layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 4)
     layer01 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer00)) #(B, 666, 826, BC)
     layer02 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer01)) #(B, 664, 824, BC)
     layer10 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer02) #(B, 332, 412, BC)
@@ -66,7 +66,7 @@ def build_unet_graph(hyperparameters:dict):
     layer82 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer81)) #(B, 480, 640, BC)
     output_tensor = tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82) #(B, 480, 640, 3)
 
-    return input_tensor, output_tensor #(B, H, W, 5), (B, H, W, 3)
+    return input_tensor, output_tensor #(B, H, W, 4), (B, H, W, 3)
 
 class Unet(tf.keras.models.Model):
     def __init__(self, inputs, outputs):
@@ -95,7 +95,7 @@ class Unet(tf.keras.models.Model):
 
     def train_step(self, data):
         # unpack data
-        RGBDE_normalized, gt_segmap_onehot = data #(B=1, H, W, 5), (B=1, H, W, 3)
+        RGBDE_normalized, gt_segmap_onehot = data #(B=1, H, W, 4), (B=1, H, W, 3)
 
         # get gradient
         with tf.GradientTape() as tape:
@@ -203,17 +203,11 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         image_height = colors.shape[0]
         image_width = colors.shape[1]
-        kernal = np.array([[-1, -1, -1],
-                           [-1, 8, -1],
-                           [-1, -1, -1]])
-        RGBDE_normalized = np.empty((image_height, image_width, 5), dtype=np.float)
-        RGBDE_normalized[:, :, :3] = colors/255.
+        RGBD_normalized = np.empty((image_height, image_width, 4), dtype=np.float)
+        RGBD_normalized[:, :, :3] = colors/255.
         depth_max = np.max(depth)
         depth_min = np.min(depth)
-        RGBDE_normalized[:, :, 3] = (depth - depth_min)/(depth_max - depth_min)
-        RGBDE_normalized[:, :, 4] = ((np.abs(signal.convolve2d(colors[:, :, 0], kernal, mode="same", boundary="symm"))
-            + np.abs(signal.convolve2d(colors[:, :, 1], kernal, mode="same", boundary="symm"))
-            + np.abs(signal.convolve2d(colors[:, :, 2], kernal, mode="same", boundary="symm"))) / 6120.)**0.5
+        RGBD_normalized[:, :, 3] = (depth - depth_min)/(depth_max - depth_min)
 
         onehot = np.array([[1, 0, 0],
                            [0, 1, 0],
@@ -224,10 +218,10 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         #일단 현재는 Batch Size를 1로 고정시켜 놓는다. 나중에 Batch Size를 조정할 수 있도록 만들면 좋으련만.....
         gt_segmap_onehot = tf.expand_dims(tf.convert_to_tensor(gt_segmap_onehot, dtype=tf.float32), axis=0)
-        RGBDE_normalized = tf.expand_dims(tf.convert_to_tensor(RGBDE_normalized, dtype=tf.float32), axis=0)
+        RGBD_normalized = tf.expand_dims(tf.convert_to_tensor(RGBD_normalized, dtype=tf.float32), axis=0)
 
         #B = 1
-        return RGBDE_normalized, gt_segmap_onehot #(B, H, W, 5), (B, H, W, 3)
+        return RGBD_normalized, gt_segmap_onehot #(B, H, W, 5), (B, H, W, 3)
 
     def __len__(self):
         return self.num_of_scenes_3d

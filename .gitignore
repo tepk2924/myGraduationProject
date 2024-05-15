@@ -29,3 +29,5 @@ texture_dataset/
 test.py
 unet_checkpoints
 unet_checkpoints/
+simple_objects
+simple_objects/

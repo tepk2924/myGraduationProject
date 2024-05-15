@@ -192,7 +192,7 @@ class TableScene(Scene):
         print("Gripper mesh loaded")
 
         # Table
-        self._table_dims = [100000.0, 100000.0, 600.0]
+        self._table_dims = [5000.0, 5000.0, 600.0]
         self._table_support = [600.0, 600.0, 600.0]
         self._table_pose = np.eye(4)
         self.table_mesh = trimesh.creation.box(self._table_dims)

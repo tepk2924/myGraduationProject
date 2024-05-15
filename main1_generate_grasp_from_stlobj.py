@@ -27,7 +27,7 @@ def main(num_of_files, number_of_points = 600):
 
     success = 0
     obj_folder = input(".stl 파일이 들어있는 폴더의 디렉토리 입력 : ")
-    obj_filenames = os.listdir(obj_folder)
+    obj_filenames = [filename for filename in os.listdir(obj_folder) if filename[-4:] == ".stl"]
     pkl_folder = input(".pkl 파일을 저장할 폴더의 디렉토리 입력 : ")
 
     while success < num_of_files:

@@ -28,7 +28,7 @@ if __name__ == '__main__':
 
     test_dataset = arch.DataGenerator(target_hdf5folder)
 
-    with open(input("불러올 하이퍼파라미터 : "), 'r') as f:
+    with open(os.path.join(saved_model_dir, "hyperparameters.yml"), 'r') as f:
         hyperparameters = yaml.safe_load(f)
 
     inputs, outputs = arch.build_unet_graph(hyperparameters)

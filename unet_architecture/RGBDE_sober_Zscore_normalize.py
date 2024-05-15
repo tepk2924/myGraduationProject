@@ -203,17 +203,21 @@ class DataGenerator(tf.keras.utils.Sequence):
 
         image_height = colors.shape[0]
         image_width = colors.shape[1]
-        kernal = np.array([[-1, -1, -1],
-                           [-1, 8, -1],
-                           [-1, -1, -1]])
+        kernal_sober_x = np.array([[-1, 0, 1],
+                                   [-2, 0, 2],
+                                   [-1, 0, 1]])
+        kernal_sober_y = np.array([[1, 2, 1],
+                                   [0, 0, 0],
+                                   [-1, -2, -1]])
+        grayscale = (colors[:, :, 0].astype(np.int) + 
+                     colors[:, :, 0].astype(np.int) + 
+                     colors[:, :, 0].astype(np.int))//3
         RGBDE_normalized = np.empty((image_height, image_width, 5), dtype=np.float)
         RGBDE_normalized[:, :, :3] = colors/255.
-        depth_max = np.max(depth)
-        depth_min = np.min(depth)
-        RGBDE_normalized[:, :, 3] = (depth - depth_min)/(depth_max - depth_min)
-        RGBDE_normalized[:, :, 4] = ((np.abs(signal.convolve2d(colors[:, :, 0], kernal, mode="same", boundary="symm"))
-            + np.abs(signal.convolve2d(colors[:, :, 1], kernal, mode="same", boundary="symm"))
-            + np.abs(signal.convolve2d(colors[:, :, 2], kernal, mode="same", boundary="symm"))) / 6120.)**0.5
+        RGBDE_normalized[:, :, 3] = (depth - np.mean(depth))/np.std(depth)
+
+        kernaled_gray = signal.convolve2d(grayscale, kernal_sober_x)**2 + signal.convolve2d(grayscale, kernal_sober_y)**2
+        RGBDE_normalized[:, :, 4] = (kernaled_gray - np.mean(kernaled_gray))/np.std(kernaled_gray)
 
         onehot = np.array([[1, 0, 0],
                            [0, 1, 0],
