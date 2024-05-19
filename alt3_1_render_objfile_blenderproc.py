@@ -36,7 +36,7 @@ for obj in objs:
         obj.set_cp("category_id", 1)
     else:
         obj.set_cp("category_id", 2)
-    texture_folder_tagged = os.path.join("/home/tepk2924/tepk2924Works/myGraduationProject/texture_dataset", obj_tag)
+    texture_folder_tagged = os.path.join(texture_folder, obj_tag)
     texture_filename = random.choice(os.listdir(texture_folder_tagged))
     mat = bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename)
     obj.add_uv_mapping(projection="cube")
