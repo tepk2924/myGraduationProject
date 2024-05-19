@@ -9,10 +9,12 @@ import os
 parser = argparse.ArgumentParser()
 parser.add_argument('--filepath', type=str)
 parser.add_argument('--target_folder', type=str)
+parser.add_argument('--texture_folder', type=str)
 args = parser.parse_args()
 
 filepath = args.filepath
 target_folder = args.target_folder
+texture_folder = args.texture_folder
 
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
@@ -34,9 +36,9 @@ for obj in objs:
         obj.set_cp("category_id", 1)
     else:
         obj.set_cp("category_id", 2)
-    texture_folder = os.path.join("/home/tepk2924/tepk2924Works/myGraduationProject/texture_dataset", obj_tag)
-    texture_filename = random.choice(os.listdir(texture_folder))
-    mat = bproc.material.create_material_from_texture(os.path.join(texture_folder, texture_filename), texture_filename)
+    texture_folder_tagged = os.path.join("/home/tepk2924/tepk2924Works/myGraduationProject/texture_dataset", obj_tag)
+    texture_filename = random.choice(os.listdir(texture_folder_tagged))
+    mat = bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename)
     obj.add_uv_mapping(projection="cube")
     obj.add_material(mat)
 
