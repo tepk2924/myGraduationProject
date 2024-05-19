@@ -26,8 +26,8 @@ def build_unet_graph(hyperparameters:dict):
     input_tensor = tf.keras.Input((480, 640, 5), batch_size=1) #(B, 480, 640, 5)
     relu = tf.keras.layers.ReLU()
     layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 5)
-    layer01 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer00)) #(B, 666, 826, BC)
-    layer02 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(3, 3))(layer01)) #(B, 664, 824, BC)
+    layer01 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer00)) #(B, 666, 826, BC)
+    layer02 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer01)) #(B, 664, 824, BC)
     layer10 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer02) #(B, 332, 412, BC)
     layer11 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer10)) #(B, 330, 410, 2BC)
     layer12 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer11)) #(B, 328, 408, 2BC)
@@ -60,10 +60,10 @@ def build_unet_graph(hyperparameters:dict):
     layer72 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer71)) #(B, 244, 324, 2BC)
     layer02_cropped = tf.keras.layers.Cropping2D(cropping=((88, 88), (88, 88)))(layer02) #(B, 488, 648, BC)
     layer72_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer72) #(B, 488, 648, 2BC)
-    layer72_conved22 = tf.keras.layers.Conv2D(filters=BC, kernel_size=(2, 2), padding="same")(layer72_upsample) #(B, 488, 648, BC)
+    layer72_conved22 = tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(2, 2), padding="same")(layer72_upsample) #(B, 488, 648, BC)
     layer80 = tf.keras.layers.Concatenate(axis=-1)((layer02_cropped, layer72_conved22)) #(B, 488, 648, 2BC)
-    layer81 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer80)) #(B, 484, 644, BC)
-    layer82 = relu(tf.keras.layers.Conv2D(filters=BC, kernel_size=(5, 5))(layer81)) #(B, 480, 640, BC)
+    layer81 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer80)) #(B, 484, 644, BC)
+    layer82 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer81)) #(B, 480, 640, BC)
     output_tensor = tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82) #(B, 480, 640, 3)
 
     return input_tensor, output_tensor #(B, H, W, 5), (B, H, W, 3)
@@ -79,6 +79,8 @@ class Unet(tf.keras.models.Model):
         self.total_loss_tracker = tf.keras.metrics.Mean(name='total_loss')
         self.accuracy_tracker = tf.keras.metrics.Accuracy(name='accuracy')
         self.effective_accuracy_tracker = tf.keras.metrics.Accuracy(name='effective_accuracy')
+        self.recall_tracker = tf.keras.metrics.Recall(name='recall')
+        self.precision_tracker = tf.keras.metrics.Precision(name='precision')
 
     @property
     def metrics(self):
@@ -90,7 +92,9 @@ class Unet(tf.keras.models.Model):
         metrics = [
             self.total_loss_tracker,
             self.accuracy_tracker,
-            self.effective_accuracy_tracker]
+            self.effective_accuracy_tracker,
+            self.recall_tracker,
+            self.precision_tracker]
         return metrics
 
     def train_step(self, data):
@@ -120,12 +124,20 @@ class Unet(tf.keras.models.Model):
         mask = tf.where(gt >= 1, True, False)
         self.effective_accuracy_tracker.update_state(y_true=tf.boolean_mask(gt, mask),
                                                      y_pred=tf.boolean_mask(pred, mask))
+        
+        gt_isvalid = tf.where(gt == 2, 1, 0)
+        pred_isvalid = tf.where(pred == 2, 1, 0)
+
+        self.recall_tracker.update_state(y_true=gt_isvalid, y_pred=pred_isvalid)
+        self.precision_tracker.update_state(y_true=gt_isvalid, y_pred=pred_isvalid)
 
         # pack return
         ret = {
             'total_loss': self.total_loss_tracker.result(),
             'accuracy': self.accuracy_tracker.result(),
-            'effective_accuracy': self.effective_accuracy_tracker.result()}
+            'effective_accuracy': self.effective_accuracy_tracker.result(),
+            'recall': self.recall_tracker.result(),
+            'precision': self.precision_tracker.result()}
         return ret
 
     def test_step(self, data):
@@ -133,7 +145,7 @@ class Unet(tf.keras.models.Model):
         RGBDE_normalized, gt_segmap_onehot = data #(H, W, 5), (H, W, 3)
 
         # get netwokr output
-        logit = self(RGBDE_normalized, training=True) #(H, W, 3)
+        logit = self(RGBDE_normalized, training=False) #(H, W, 3)
         pred_segmap_prob = tf.nn.softmax(logit) #(H, W, 3)
 
         CEvals = tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, pred_segmap_prob) #(H, W)
@@ -150,11 +162,19 @@ class Unet(tf.keras.models.Model):
         self.effective_accuracy_tracker.update_state(y_true=tf.boolean_mask(gt, mask),
                                                      y_pred=tf.boolean_mask(pred, mask))
         
+        gt_isvalid = tf.where(gt == 2, 1, 0)
+        pred_isvalid = tf.where(pred == 2, 1, 0)
+
+        self.recall_tracker.update_state(y_true=gt_isvalid, y_pred=pred_isvalid)
+        self.precision_tracker.update_state(y_true=gt_isvalid, y_pred=pred_isvalid)
+
         # pack return
         ret = {
             'total_loss': self.total_loss_tracker.result(),
             'accuracy': self.accuracy_tracker.result(),
-            'effective_accuracy': self.effective_accuracy_tracker.result()}
+            'effective_accuracy': self.effective_accuracy_tracker.result(),
+            'recall': self.recall_tracker.result(),
+            'precision': self.precision_tracker.result()}
         return ret
 
 class DataGenerator(tf.keras.utils.Sequence):
@@ -209,15 +229,15 @@ class DataGenerator(tf.keras.utils.Sequence):
         kernal_sober_y = np.array([[1, 2, 1],
                                    [0, 0, 0],
                                    [-1, -2, -1]])
-        grayscale = (colors[:, :, 0].astype(np.int) + 
-                     colors[:, :, 0].astype(np.int) + 
-                     colors[:, :, 0].astype(np.int))//3
         RGBDE_normalized = np.empty((image_height, image_width, 5), dtype=np.float)
         RGBDE_normalized[:, :, :3] = colors/255.
         RGBDE_normalized[:, :, 3] = (depth - np.mean(depth))/np.std(depth)
 
-        kernaled_gray = signal.convolve2d(grayscale, kernal_sober_x)**2 + signal.convolve2d(grayscale, kernal_sober_y)**2
-        RGBDE_normalized[:, :, 4] = (kernaled_gray - np.mean(kernaled_gray))/np.std(kernaled_gray)
+        kernaled = (signal.convolve2d(colors[:, :, 0].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 0].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2 + 
+                    signal.convolve2d(colors[:, :, 1].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 1].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2 + 
+                    signal.convolve2d(colors[:, :, 2].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 2].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2)
+
+        RGBDE_normalized[:, :, 4] = (kernaled - np.mean(kernaled))/np.std(kernaled)
 
         onehot = np.array([[1, 0, 0],
                            [0, 1, 0],

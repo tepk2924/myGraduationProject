@@ -93,6 +93,11 @@ if __name__ == '__main__':
             initial_learning_rate=LR,
             decay_steps=1,
             alpha=hyperparameters["ALPHA"])
+    elif LR_SCHEDULE == "ExponentialDecay":
+        lr_scheduler = tf.keras.optimizers.schedules.ExponentialDecay(
+            initial_learning_rate=LR,
+            decay_steps=1,
+            decay_rate=hyperparameters["DECAY"])
     elif LR_SCHEDULE == "Constant":
         lr_scheduler = LR
     else:
@@ -123,7 +128,7 @@ if __name__ == '__main__':
     ####################
     # callbacks
     save_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(model_dir, "weights", "{epoch:03d}-{val_total_loss:.3f}-{val_accuracy:.4f}-{val_effective_accuracy:.4f}.h5"),
+        filepath=os.path.join(model_dir, "weights", "E{epoch:03d}-L{val_total_loss:.6f}-A{val_accuracy:.4f}-EA{val_effective_accuracy:.4f}.h5"),
         save_weights_only=False,
         monitor="val_total_loss",
         mode="min",

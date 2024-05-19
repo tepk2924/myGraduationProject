@@ -60,8 +60,9 @@ if __name__ == '__main__':
 
     with h5py.File(os.path.join(target_hdf5folder, f"{scene_number}.hdf5"), "r") as f:
         original_image = np.array(f["colors"])
+        original_depth = np.array(f["depth"])
 
-    logit = model(RGBDE_normalized)
+    logit = model(RGBDE_normalized, training=False)
     pred_segmap_prob = tf.nn.softmax(logit)
 
     total_loss = tf.reduce_mean(tf.keras.losses.categorical_crossentropy(gt_segmap_onehot, pred_segmap_prob))
@@ -77,6 +78,15 @@ if __name__ == '__main__':
     mask = tf.where(gt >= 1, True, False)
     effective_accuracy = effective_accuracy_tracker(y_true=tf.boolean_mask(gt, mask), y_pred=tf.boolean_mask(pred, mask))
 
+    gt_isvalid = tf.where(gt == 2, 1, 0)
+    pred_isvalid = tf.where(pred == 2, 1, 0)
+
+    recall_tracker = tf.keras.metrics.Recall(name='recall')
+    precision_tracker = tf.keras.metrics.Precision(name='precision')
+
+    recall = recall_tracker(gt_isvalid, pred_isvalid)
+    precision = precision_tracker(gt_isvalid, pred_isvalid)
+
     gt_segmap=tf.squeeze(gt, axis=0).numpy()
     pred_segmap=tf.squeeze(pred, axis=0).numpy()
     
@@ -86,22 +96,29 @@ if __name__ == '__main__':
     gt_segmap_RGB = convert_RGB[gt_segmap]
     pred_segmap_RGB = convert_RGB[pred_segmap]
 
-    plt.subplot(1, 3, 1)
+    depth_image = np.tile(np.expand_dims(np.uint8(255*(original_depth - np.min(original_depth))/(np.max(original_depth) - np.min(original_depth))), axis=-1), (1, 1, 3))
+
+    plt.subplot(1, 4, 1)
     plt.imshow(original_image)
     plt.axis("off")
     plt.title("original_image")
 
-    plt.subplot(1, 3, 2)
+    plt.subplot(1, 4, 2)
+    plt.imshow(depth_image)
+    plt.axis("off")
+    plt.title("original_depth")
+
+    plt.subplot(1, 4, 3)
     plt.imshow(gt_segmap_RGB)
     plt.axis("off")
     plt.title("gt_segmap")
 
-    plt.subplot(1, 3, 3)
+    plt.subplot(1, 4, 4)
     plt.imshow(pred_segmap_RGB)
     plt.axis("off")
     plt.title("pred_segmap")
 
-    plt.figtext(0.5, 0.01, f"{os.path.basename(saved_model_dir)}\n{target_epoch = }\n{scene_number = }\n{total_loss = :.3f}\n{accuracy = :.4f}\n{effective_accuracy = :.4f}", ha='center', va='bottom', fontsize=12)
+    plt.figtext(0.5, 0.01, f"{os.path.basename(saved_model_dir)}\n{target_epoch = }\n{scene_number = }\n{total_loss = :.6f}\n{accuracy = :.4f}\n{effective_accuracy = :.4f}\n{recall = :.4f}\n{precision = :.4f}", ha='center', va='bottom', fontsize=12)
 
-    plt.savefig(os.path.join(saved_model_dir, f"{os.path.basename(saved_model_dir)}_{target_epoch}Ep_datanum{scene_number}.png"))
+    plt.savefig(os.path.join(saved_model_dir, f"{os.path.basename(saved_model_dir)}_{target_epoch}Ep_datanum{scene_number}.png"), dpi=300)
     plt.show()
