@@ -128,7 +128,7 @@ if __name__ == '__main__':
     ####################
     # callbacks
     save_callback = tf.keras.callbacks.ModelCheckpoint(
-        filepath=os.path.join(model_dir, "weights", "E{epoch:03d}-L{val_total_loss:.6f}-A{val_accuracy:.4f}-EA{val_effective_accuracy:.4f}.h5"),
+        filepath=os.path.join(model_dir, "weights", "{epoch:03d}-L{val_total_loss:.6f}-A{val_accuracy:.4f}-EA{val_effective_accuracy:.4f}.h5"),
         save_weights_only=False,
         monitor="val_total_loss",
         mode="min",
