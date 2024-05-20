@@ -23,47 +23,49 @@ def build_unet_graph(hyperparameters:dict):
         output_tensor: tf.Tensor : output_tensor to be compared to gt (batch_num, image_height: 480, image_width: 640, 3)
     """
     BC = hyperparameters["BC"]
+    DROP_RATE = hyperparameters["DROP_RATE"] if "DROP_RATE" in hyperparameters else 0
     input_tensor = tf.keras.Input((480, 640, 5), batch_size=1) #(B, 480, 640, 5)
     relu = tf.keras.layers.ReLU()
+    drop = tf.keras.layers.Dropout(rate=DROP_RATE)
     layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 5)
-    layer01 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer00)) #(B, 666, 826, BC)
-    layer02 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer01)) #(B, 664, 824, BC)
+    layer01 = drop(relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer00))) #(B, 666, 826, BC)
+    layer02 = drop(relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(3, 3))(layer01))) #(B, 664, 824, BC)
     layer10 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer02) #(B, 332, 412, BC)
-    layer11 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer10)) #(B, 330, 410, 2BC)
-    layer12 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer11)) #(B, 328, 408, 2BC)
+    layer11 = drop(relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer10))) #(B, 330, 410, 2BC)
+    layer12 = drop(relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer11))) #(B, 328, 408, 2BC)
     layer20 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer12) #(B, 164, 204, 2BC)
-    layer21 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer20)) #(B, 162, 202, 4BC)
-    layer22 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer21)) #(B, 160, 200, 4BC)
+    layer21 = drop(relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer20))) #(B, 162, 202, 4BC)
+    layer22 = drop(relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer21))) #(B, 160, 200, 4BC)
     layer30 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer22) #(B, 80, 100, 4BC)
-    layer31 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer30)) #(B, 78, 98, 8BC)
-    layer32 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer31)) #(B, 76, 96, 8BC)
+    layer31 = drop(relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer30))) #(B, 78, 98, 8BC)
+    layer32 = drop(relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer31))) #(B, 76, 96, 8BC)
     layer40 = tf.keras.layers.MaxPool2D((2, 2), (2, 2))(layer32) #(B, 38, 48, 8BC)
-    layer41 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer40)) #(B, 36, 46, 16BC)
-    layer42 = relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer41)) #(B, 34, 44, 16BC)
+    layer41 = drop(relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer40))) #(B, 36, 46, 16BC)
+    layer42 = drop(relu(tf.keras.layers.Conv2D(filters=16*BC, kernel_size=(3, 3))(layer41))) #(B, 34, 44, 16BC)
     layer32_cropped = tf.keras.layers.Cropping2D(cropping=((4, 4), (4, 4)))(layer32) #(B, 68, 88, 8BC)
     layer42_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer42) #(B, 68, 88, 16BC)
     layer42_conved22 = tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(2, 2), padding="same")(layer42_upsample) #(B, 68, 88, 8BC)
     layer50 = tf.keras.layers.Concatenate(axis=-1)((layer32_cropped, layer42_conved22)) #(B, 68, 88, 16BC)
-    layer51 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer50)) #(B, 66, 86, 8BC)
-    layer52 = relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer51)) #(B, 64, 84, 8BC)
+    layer51 = drop(relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer50))) #(B, 66, 86, 8BC)
+    layer52 = drop(relu(tf.keras.layers.Conv2D(filters=8*BC, kernel_size=(3, 3))(layer51))) #(B, 64, 84, 8BC)
     layer22_cropped = tf.keras.layers.Cropping2D(cropping=((16, 16), (16, 16)))(layer22) #(B, 128, 168, 4BC)
     layer52_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer52) #(B, 128, 168, 8BC)
     layer52_conved22 = tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(2, 2), padding="same")(layer52_upsample) #(B, 128, 168, 4BC)
     layer60 = tf.keras.layers.Concatenate(axis=-1)((layer22_cropped, layer52_conved22)) #(B, 128, 168, 8BC)
-    layer61 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer60)) #(B, 126, 166, 4BC)
-    layer62 = relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer61)) #(B, 124, 164, 4BC)
+    layer61 = drop(relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer60))) #(B, 126, 166, 4BC)
+    layer62 = drop(relu(tf.keras.layers.Conv2D(filters=4*BC, kernel_size=(3, 3))(layer61))) #(B, 124, 164, 4BC)
     layer12_cropped = tf.keras.layers.Cropping2D(cropping=((40, 40), (40, 40)))(layer12) #(B, 248, 328, 2BC)
     layer62_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer62) #(B, 248, 328, 4BC)
     layer62_conved22 = tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(2, 2), padding="same")(layer62_upsample) #(B, 248, 328, 2BC)
     layer70 = tf.keras.layers.Concatenate(axis=-1)((layer12_cropped, layer62_conved22)) #(B, 248, 328, 4BC)
-    layer71 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer70)) #(B, 246, 326, 2BC)
-    layer72 = relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer71)) #(B, 244, 324, 2BC)
+    layer71 = drop(relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer70))) #(B, 246, 326, 2BC)
+    layer72 = drop(relu(tf.keras.layers.Conv2D(filters=2*BC, kernel_size=(3, 3))(layer71))) #(B, 244, 324, 2BC)
     layer02_cropped = tf.keras.layers.Cropping2D(cropping=((88, 88), (88, 88)))(layer02) #(B, 488, 648, BC)
     layer72_upsample = tf.keras.layers.UpSampling2D(size=(2, 2))(layer72) #(B, 488, 648, 2BC)
     layer72_conved22 = tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(2, 2), padding="same")(layer72_upsample) #(B, 488, 648, BC)
     layer80 = tf.keras.layers.Concatenate(axis=-1)((layer02_cropped, layer72_conved22)) #(B, 488, 648, 2BC)
-    layer81 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer80)) #(B, 484, 644, BC)
-    layer82 = relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer81)) #(B, 480, 640, BC)
+    layer81 = drop(relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer80))) #(B, 484, 644, BC)
+    layer82 = drop(relu(tf.keras.layers.Conv2D(filters=1*BC, kernel_size=(5, 5))(layer81))) #(B, 480, 640, BC)
     output_tensor = tf.keras.layers.Conv2D(filters=3, kernel_size=(1, 1))(layer82) #(B, 480, 640, 3)
 
     return input_tensor, output_tensor #(B, H, W, 5), (B, H, W, 3)
@@ -229,15 +231,15 @@ class DataGenerator(tf.keras.utils.Sequence):
         kernal_sober_y = np.array([[1, 2, 1],
                                    [0, 0, 0],
                                    [-1, -2, -1]])
+        grayscale = (colors[:, :, 0].astype(np.int) + 
+                     colors[:, :, 0].astype(np.int) + 
+                     colors[:, :, 0].astype(np.int))//3
         RGBDE_normalized = np.empty((image_height, image_width, 5), dtype=np.float)
         RGBDE_normalized[:, :, :3] = colors/255.
         RGBDE_normalized[:, :, 3] = (depth - np.mean(depth))/np.std(depth)
 
-        kernaled = (signal.convolve2d(colors[:, :, 0].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 0].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2 + 
-                    signal.convolve2d(colors[:, :, 1].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 1].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2 + 
-                    signal.convolve2d(colors[:, :, 2].astype(np.int), kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(colors[:, :, 2].astype(np.int), kernal_sober_y, mode="same", boundary="symm")**2)
-
-        RGBDE_normalized[:, :, 4] = (kernaled - np.mean(kernaled))/np.std(kernaled)
+        kernaled_gray = signal.convolve2d(grayscale, kernal_sober_x, mode="same", boundary="symm")**2 + signal.convolve2d(grayscale, kernal_sober_y, mode="same", boundary="symm")**2
+        RGBDE_normalized[:, :, 4] = (kernaled_gray - np.mean(kernaled_gray))/np.std(kernaled_gray)
 
         onehot = np.array([[1, 0, 0],
                            [0, 1, 0],
