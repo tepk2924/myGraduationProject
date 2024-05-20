@@ -53,7 +53,7 @@ if __name__ == '__main__':
     ###########
     # evaluate the model
 
-    scene_numbers = [*range(len(target_hdf5folder))]
+    scene_numbers = [*range(len(os.listdir(target_hdf5folder)))]
     results = []
     for scene_number in scene_numbers:
 
