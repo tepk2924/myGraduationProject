@@ -121,4 +121,3 @@ if __name__ == '__main__':
     plt.figtext(0.5, 0.01, f"{os.path.basename(saved_model_dir)}\n{target_epoch = }\n{scene_number = }\n{total_loss = :.6f}\n{accuracy = :.4f}\n{effective_accuracy = :.4f}\n{recall = :.4f}\n{precision = :.4f}", ha='center', va='bottom', fontsize=12)
 
     plt.savefig(os.path.join(saved_model_dir, f"{os.path.basename(saved_model_dir)}_{target_epoch}Ep_datanum{scene_number}.png"), dpi=300)
-    plt.show()

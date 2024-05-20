@@ -131,4 +131,3 @@ if __name__ == '__main__':
         
     plt.figtext(0.5, 0.01, f"{saved_model_names = }\n{target_epochs = }\n{scene_number = }\n{total_losses = }\n{accuracies = }\n{effective_accuracies = }\n{recalls = }\n{precisions = }", ha='center', va='bottom', fontsize=12)
     plt.savefig(os.path.join(os.path.dirname(list_of_models_dir[0]), f"multi_test_scene{scene_number:02d}.png"), dpi=300)
-    plt.show()
