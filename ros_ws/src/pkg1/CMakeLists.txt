@@ -163,6 +163,7 @@ catkin_install_python(PROGRAMS
   scripts/listener.py
   scripts/talker.py
   scripts/camera.py
+  scripts/unet_model.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

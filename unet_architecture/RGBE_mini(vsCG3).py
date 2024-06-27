@@ -19,12 +19,12 @@ def build_unet_graph(hyperparameters:dict):
         hyperparameters : a dictionary containing some hyperparameters
     --------------
     Returns:
-        input_tensor tf.Tensor : input data with 4 channels (batch_num, image_height: 480, image_width: 640, 5).
+        input_tensor tf.Tensor : input data with 4 channels (batch_num, image_height: 480, image_width: 640, 4).
         output_tensor: tf.Tensor : output_tensor to be compared to gt (batch_num, image_height: 480, image_width: 640, 3)
     """
     BC = hyperparameters["BC"]
     DROP_RATE = hyperparameters["DROP_RATE"] if "DROP_RATE" in hyperparameters else 0
-    input_tensor = tf.keras.Input((480, 640, 4), batch_size=1) #(B, 480, 640, 5)
+    input_tensor = tf.keras.Input((480, 640, 4), batch_size=1) #(B, 480, 640, 4)
     relu = tf.keras.layers.ReLU()
     drop = tf.keras.layers.Dropout(rate=DROP_RATE)
     layer00 = tf.pad(input_tensor, ((0, 0), (94, 94), (94, 94), (0, 0)), mode="SYMMETRIC") #(B, 668, 828, 5)

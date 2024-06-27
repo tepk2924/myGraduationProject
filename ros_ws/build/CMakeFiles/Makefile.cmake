@@ -21,6 +21,7 @@ set(CMAKE_MAKEFILE_DEPENDS
   "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/src/pkg1/scripts/camera.py"
   "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/src/pkg1/scripts/listener.py"
   "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/src/pkg1/scripts/talker.py"
+  "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/src/pkg1/scripts/unet_model.py"
   "/opt/ros/noetic/share/catkin/cmake/all.cmake"
   "/opt/ros/noetic/share/catkin/cmake/assert.cmake"
   "/opt/ros/noetic/share/catkin/cmake/atomic_configure_file.cmake"
