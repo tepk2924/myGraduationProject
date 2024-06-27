@@ -1,0 +1,2 @@
+pkg1
+-DCATKIN_DEVEL_PREFIX=/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/devel -DCMAKE_INSTALL_PREFIX=/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/install -G Unix Makefiles

@@ -1,0 +1,8 @@
+prefix=/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/devel
+
+Name: pkg1
+Description: Description of pkg1
+Version: 0.0.0
+Cflags: 
+Libs: -L${prefix}/lib 
+Requires: 
