@@ -1,0 +1,8 @@
+<launch>
+    <node pkg="pkg1" type="camera.py" name="camera" respawn="true"/>
+    <node pkg="rviz" type="rviz" name="rviz"/>
+    <node pkg="pkg1" type="unet_model.py" name="unet_model" respawn="true"/>
+    <param name="model_name" type="str" value="RGBE_minivsCG3"/>
+    <param name="target_epoch" type="int" value="-1"/>
+
+</launch>
