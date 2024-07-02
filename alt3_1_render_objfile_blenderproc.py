@@ -55,10 +55,18 @@ for _ in range(random.randint(1, 5)):
     lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
     lights[-1].set_energy(250 + 250*random.random())
 
-K = np.array([[616.36529541, 0, 310.25881958],
-            [0, 616.20294189, 236.59980774],
-            [0, 0, 1]])
-bproc.camera.set_intrinsics_from_K_matrix(K, 640, 480)
+CAMERA = "ZED"
+
+if CAMERA == "RealSense":
+    K = np.array([[616.36529541, 0, 310.25881958],
+                [0, 616.20294189, 236.59980774],
+                [0, 0, 1]])
+    bproc.camera.set_intrinsics_from_K_matrix(K, 640, 480) #Intel RealSense
+elif CAMERA == "ZED":
+    K = np.array([[676.5935668945312, 0, 609.4650268554688],
+                [0, 676.5935668945312, 366.338134765625],
+                [0, 0, 1]])
+    bproc.camera.set_intrinsics_from_K_matrix(K, 1280, 720) #ZED
 
 deg = math.pi/180
 theta = 2*math.pi*random.random()

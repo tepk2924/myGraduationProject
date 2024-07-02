@@ -20,3 +20,4 @@ blenderproc==2.7.0
 #ZED SDK 4.1.2 for Ubuntu 20 (Works for CUDA 11.2)
 #ZED Python API (pyzed)
 #ZED 카메라를 USB 3.0 포트 (파랑색)에 연결할 것. 그 이하 버전은 작동 안함!
+numpy==1.19.5
