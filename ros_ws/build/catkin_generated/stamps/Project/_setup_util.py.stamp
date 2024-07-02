@@ -1,4 +1,4 @@
-#!/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python
+#!/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python3
 # -*- coding: utf-8 -*-
 
 # Software License Agreement (BSD License)

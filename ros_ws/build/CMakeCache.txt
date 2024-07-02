@@ -353,7 +353,7 @@ LSB_RELEASE_EXECUTABLE:FILEPATH=/usr/bin/lsb_release
 NOSETESTS:FILEPATH=/usr/bin/nosetests3
 
 //Path to a program.
-PYTHON_EXECUTABLE:FILEPATH=/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python
+PYTHON_EXECUTABLE:FILEPATH=/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python3
 
 //Specify specific Python version to use ('major.minor' or 'major')
 PYTHON_VERSION:STRING=3
@@ -679,7 +679,7 @@ CMAKE_VERBOSE_MAKEFILE-ADVANCED:INTERNAL=1
 //Details about finding PY_em
 FIND_PACKAGE_MESSAGE_DETAILS_PY_em:INTERNAL=[/home/tepk2924/tepk2924Works/myGraduationProject/venv/lib/python3.8/site-packages/em.py][v()]
 //Details about finding PythonInterp
-FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python][v3.8.10()]
+FIND_PACKAGE_MESSAGE_DETAILS_PythonInterp:INTERNAL=[/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python3][v3.8.10()]
 //Details about finding Threads
 FIND_PACKAGE_MESSAGE_DETAILS_Threads:INTERNAL=[TRUE][v()]
 GMOCK_FROM_SOURCE_FOUND:INTERNAL=TRUE

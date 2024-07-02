@@ -54,7 +54,7 @@ CMAKE_BINARY_DIR = /home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/build
 include CMakeFiles/clean_test_results.dir/progress.make
 
 CMakeFiles/clean_test_results:
-	/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/build/test_results
+	/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python3 /opt/ros/noetic/share/catkin/cmake/test/remove_test_results.py /home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/build/test_results
 
 clean_test_results: CMakeFiles/clean_test_results
 clean_test_results: CMakeFiles/clean_test_results.dir/build.make

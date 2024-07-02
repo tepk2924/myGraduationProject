@@ -164,6 +164,7 @@ catkin_install_python(PROGRAMS
   scripts/talker.py
   scripts/camera.py
   scripts/unet_model.py
+  scripts/zed_camera.py
   DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

@@ -1,4 +1,4 @@
-#!/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python
+#!/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python3
 # -*- coding: utf-8 -*-
 # generated from catkin/cmake/template/script.py.in
 # creates a relay to a python script source file, acting as that file.

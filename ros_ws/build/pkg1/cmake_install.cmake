@@ -68,3 +68,7 @@ if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_
   file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkg1" TYPE PROGRAM FILES "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/build/pkg1/catkin_generated/installspace/unet_model.py")
 endif()
 
+if("x${CMAKE_INSTALL_COMPONENT}x" STREQUAL "xUnspecifiedx" OR NOT CMAKE_INSTALL_COMPONENT)
+  file(INSTALL DESTINATION "${CMAKE_INSTALL_PREFIX}/lib/pkg1" TYPE PROGRAM FILES "/home/tepk2924/tepk2924Works/myGraduationProject/ros_ws/build/pkg1/catkin_generated/installspace/zed_camera.py")
+endif()
+

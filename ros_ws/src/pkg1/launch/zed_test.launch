@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="pkg1" type="zed_camera.py" name="camera" respawn="true"/>
+    <node pkg="rviz" type="rviz" name="rviz"/>
+
+</launch>
