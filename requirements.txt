@@ -28,3 +28,4 @@ pyzed == 4.1
 # np.complex = np.complex_
 # np.object = np.object_
 # np.typeDict = np.sctypeDict
+rosnumpy == 0.0.5.2

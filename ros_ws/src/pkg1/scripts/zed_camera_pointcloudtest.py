@@ -4,17 +4,15 @@ import numpy as np
 import cv2
 import rospy
 import inspect
-from sensor_msgs.msg import Image
-from std_msgs.msg import Float32MultiArray
-from cv_bridge import CvBridge, CvBridgeError
+np.float = np.float_
+import ros_numpy
+from sensor_msgs.msg import PointCloud2
 
 def zed_camera():
     # Create a Camera object
     zed = sl.Camera()
-    pub_rgb = rospy.Publisher('zed_rgb_frame', Image, queue_size=10)
-    pub_depth = rospy.Publisher('zed_depth_frame', Float32MultiArray, queue_size=10)
+    pub_pc = rospy.Publisher('zed_pointcloud', PointCloud2, queue_size=10)
     rospy.init_node('camera')
-    bridge = CvBridge()
     rate = rospy.Rate(10)
 
     # Create a InitParameters object and set configuration parameters
@@ -54,14 +52,13 @@ def zed_camera():
             # Retrieve colored point cloud. Point cloud is aligned on the left image.
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
             zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
-
-            # depth_np = depth.get_data()
-            rgb_left_np = rgb_left.get_data()[:, :, :3]
-            depth_np:np.ndarray = depth.get_data()
-            depth_msg = Float32MultiArray()
-            depth_msg.data = depth_np.reshape((-1)).tolist()
-            pub_rgb.publish(bridge.cv2_to_imgmsg(rgb_left_np, "rgb8"))
-            pub_depth.publish(depth_msg)
+            pc = point_cloud.get_data().reshape((-1, 4))
+            pc_array = np.zeros(len(pc), dtype=[('x', np.float32), ('y', np.float32), ('z', np.float32), ('intensity', np.float32)])
+            pc_array['x'] = pc[:, 0]
+            pc_array['y'] = pc[:, 1]
+            pc_array['z'] = pc[:, 2]
+            pc_array['intensity'] = pc[:, 3]
+            pub_pc.publish(ros_numpy.msgify(PointCloud2, pc_array, frame_id = 'frame'))
             rate.sleep()
 
     # Close the camera
