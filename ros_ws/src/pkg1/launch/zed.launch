@@ -1,5 +1,5 @@
 <launch>
-    <node pkg="pkg1" type="zed_test_camera.py" name="camera" respawn="false" output="screen"/>
+    <node pkg="pkg1" type="zed_camera.py" name="camera" respawn="false" output="screen"/>
     <node pkg="rviz" type="rviz" name="rviz"/>
     <node pkg="pkg1" type="zed_camera_receiver.py" name="receiver" respawn="false" output="screen"/>
     <param name="model_name" type="str" value="ZED_CG3"/>
