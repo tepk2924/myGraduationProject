@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="pkg1" type="zed_camera_pointcloudtest.py" name="camera" respawn="false" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz"/>
+</launch>
