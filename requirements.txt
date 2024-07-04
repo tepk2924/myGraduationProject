@@ -1,5 +1,6 @@
-#CUDA==11.2, CuDNN==8.1.1 or CUDA==10.1, CuDNN==7.6.5
-tensorflow==2.5.0 #for CUDA==11.2, tensorflow==2.3.1 for CUDA==10.1
+#Ubuntu 20.04
+#CUDA==11.2, CuDNN==8.1.1
+tensorflow==2.5.0 #for CUDA==11.2
 matplotlib==3.3.4
 trimesh==3.23.5
 scipy==1.5.4
@@ -17,7 +18,13 @@ opencv-python==4.5.4.58
 pyrender==0.1.45
 pyglet==1.5.0
 blenderproc==2.7.0
-#ZED SDK 4.1.2 for Ubuntu 20 (Works for CUDA 11.2)
-#ZED Python API (pyzed)
-#ZED 카메라를 USB 3.0 포트 (파랑색)에 연결할 것. 그 이하 버전은 작동 안함!
-numpy==1.19.5
+ZED_SDK == 4.1.2 @https://www.stereolabs.com/developers/release#82af3640d775 #(Works for CUDA 11.2) for Ubuntu20 (static version: y, AI Module: n, Install Samples: n, Install Python API: y)
+pyzed == 4.1
+#At this point, numpy should be 1.24.4 and tensorflow 2.5.0 uses numpy < 1.20 (name deprecation)
+# To solve the name deprecation problem, every script using tensorflow should contain the following code between "import tensorflow as tf" and "import numpy as np"
+# np.bool = np.bool_
+# np.int = np.int_
+# np.float = np.float_
+# np.complex = np.complex_
+# np.object = np.object_
+# np.typeDict = np.sctypeDict

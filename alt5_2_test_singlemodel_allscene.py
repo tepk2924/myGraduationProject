@@ -6,6 +6,12 @@ import yaml
 import importlib
 
 import numpy as np
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.typeDict = np.sctypeDict
 import tensorflow as tf
 import matplotlib.pyplot as plt
 import h5py
