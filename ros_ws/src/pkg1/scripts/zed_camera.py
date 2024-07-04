@@ -4,13 +4,14 @@ import cv2
 import rospy
 import inspect
 from sensor_msgs.msg import Image
+from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge, CvBridgeError
 
 def zed_camera():
     # Create a Camera object
     zed = sl.Camera()
     pub_rgb = rospy.Publisher('zed_rgb_frame', Image, queue_size=10)
-    pub_depth = rospy.Publisher('zed_depth_frame', Image, queue_size=10)
+    pub_depth = rospy.Publisher('zed_depth_frame', Float32MultiArray, queue_size=10)
     rospy.init_node('camera')
     bridge = CvBridge()
     rate = rospy.Rate(10)
@@ -18,7 +19,7 @@ def zed_camera():
     # Create a InitParameters object and set configuration parameters
     init_params = sl.InitParameters()
     init_params.depth_mode = sl.DEPTH_MODE.QUALITY  # Use QUALITY depth mode
-    init_params.coordinate_units = sl.UNIT.MILLIMETER  # Use meter units (for depth measurements)
+    init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
 
     # Open the camera
     status = zed.open(init_params)
@@ -33,7 +34,6 @@ def zed_camera():
     depth = sl.Mat()
     rgb_left = sl.Mat()
     point_cloud = sl.Mat()
-    depth_view = sl.Mat()
 
     mirror_ref = sl.Transform()
     mirror_ref.set_translation(sl.Translation(2.75,4.0,0))
@@ -52,15 +52,15 @@ def zed_camera():
             zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
             # Retrieve colored point cloud. Point cloud is aligned on the left image.
             zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
-            zed.retrieve_image(depth_view, sl.VIEW.DEPTH)
             zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
 
             # depth_np = depth.get_data()
             rgb_left_np = rgb_left.get_data()[:, :, :3]
-            depth_view_np = depth_view.get_data()[:, :, :3]
-            pub_rgb.publish(bridge.cv2_to_imgmsg(rgb_left_np, "bgr8"))
-            pub_depth.publish(bridge.cv2_to_imgmsg(depth_view_np, "bgr8"))
-
+            depth_np:np.ndarray = depth.get_data()
+            depth_msg = Float32MultiArray()
+            depth_msg.data = depth_np.reshape((-1)).tolist()
+            pub_rgb.publish(bridge.cv2_to_imgmsg(rgb_left_np, "rgb8"))
+            pub_depth.publish(depth_msg)
             rate.sleep()
 
     # Close the camera
