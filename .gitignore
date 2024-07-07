@@ -32,3 +32,5 @@ unet_checkpoints/
 simple_objects
 simple_objects/
 ros_ws/src/zed-ros-wrapper
+ros_ws/build
+ros_ws/devel
