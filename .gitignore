@@ -34,3 +34,5 @@ simple_objects/
 ros_ws/src/zed-ros-wrapper
 ros_ws/build
 ros_ws/devel
+ros_ws/src/drivers
+.vscode
