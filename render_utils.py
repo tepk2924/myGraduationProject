@@ -6,7 +6,7 @@ import tensorflow as tf
 import copy
 import pickle
 
-from graspdata import GraspData
+from common1_4_graspdata import GraspData
 
 def show_image(data, segmap = None):
     """

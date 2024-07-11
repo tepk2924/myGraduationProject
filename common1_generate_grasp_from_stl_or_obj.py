@@ -26,9 +26,9 @@ def main(num_of_files, number_of_points = 600):
     start_time = time.time()
 
     success = 0
-    obj_folder = input(".stl 파일이 들어있는 폴더의 디렉토리 입력 : ")
-    obj_filenames = [filename for filename in os.listdir(obj_folder) if filename[-4:] == ".stl"]
-    pkl_folder = input(".pkl 파일을 저장할 폴더의 디렉토리 입력 : ")
+    obj_folder = input("Please enter the directory of the folder containing .stl files: ")
+    obj_filenames = [filename for filename in os.listdir(obj_folder) if filename[-4:] == ".stl" or filename[-4:] == ".obj"]
+    pkl_folder = input("Please enter the directory of the folder to save the results in the form of .pkl files : ")
 
     while success < num_of_files:
         try:
@@ -36,11 +36,11 @@ def main(num_of_files, number_of_points = 600):
             print(f"-----Evaluating {obj_filename}----")
             mesh = trimesh.load(os.path.join(obj_folder, obj_filename))
             if not mesh.is_watertight:
-                print("Mesh가 watertight하지 않음!")
+                print("Mesh is not watertight!")
                 raise ValueError
             
             if mesh.body_count != 1:
-                print("Mesh가 한 개의 오브젝트가 아님!")
+                print("The mesh does not consists of only one objects!")
                 raise ValueError
 
             mesh_size = mesh.extents
@@ -49,7 +49,7 @@ def main(num_of_files, number_of_points = 600):
             minimum_scalar = max([20/mesh_size[0], 20/mesh_size[1], 20/mesh_size[2]])
             maxinum_scalar = min([300/mesh_size[0], 300/mesh_size[1], 300/mesh_size[2]])
             if maxinum_scalar < minimum_scalar:
-                print("크기가 적당하지 않음!")
+                print("The dimension is not appropriate!")
                 raise ValueError
             scalar = minimum_scalar + (maxinum_scalar - minimum_scalar)*random.random()
 

@@ -10,8 +10,8 @@ import trimesh
 from multiprocessing import freeze_support
 from os import close, path, walk
 
-import suction_cup_logic as scl
-import suction_cup_lib as sclib
+import common1_1_suction_cup_logic as scl
+import common1_2_suction_cup_lib as sclib
 from trimeshVisualize import Scene
 
 def evaluate_object_one(obj_name,

@@ -19,7 +19,7 @@ from scipy import optimize
 from scipy.integrate import trapz
 from numpy import gradient
 
-import suction_cup_functions as scf
+import common1_3_suction_cup_functions as scf
 
 # Params
 # --------------------------------------------------

@@ -5,7 +5,7 @@ import random
 import os
 
 import trimeshVisualize
-from graspdata import GraspData
+from common1_4_graspdata import GraspData
 
 if __name__ == "__main__":
     scene = trimeshVisualize.Scene()

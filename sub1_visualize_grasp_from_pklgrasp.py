@@ -1,6 +1,6 @@
 import pickle
 from trimeshVisualize import Scene
-from graspdata import GraspData
+from common1_4_graspdata import GraspData
 import numpy as np
 import trimesh
 

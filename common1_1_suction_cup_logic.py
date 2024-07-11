@@ -13,8 +13,8 @@ from trimeshVisualize import Scene
 from multiprocessing import Pool
 import multiprocessing_utils
 
-import suction_cup_lib as sclib
-import suction_cup_functions as scf
+import common1_2_suction_cup_lib as sclib
+import common1_3_suction_cup_functions as scf
 
 # BELOW ARE THE FUNCTIONS FOR EVALUATIONG THE WHOLE MODEL
 class EvaluateMC():

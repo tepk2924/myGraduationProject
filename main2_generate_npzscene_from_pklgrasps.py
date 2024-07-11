@@ -13,7 +13,7 @@ from os import walk
 # from trimesh.permutate import transform
 from multiprocessing import freeze_support
 
-from graspdata import GraspData
+from common1_4_graspdata import GraspData
 import multiprocessing_utils
 
 def transform_grasp(grasp_dict, tf, add_transform_score = True):

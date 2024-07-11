@@ -1,5 +1,5 @@
 import trimesh
-from graspdata import GraspData
+from common1_4_graspdata import GraspData
 import pickle
 import numpy as np
 import os

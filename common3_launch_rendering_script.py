@@ -16,5 +16,5 @@ if __name__ == "__main__":
 
             print(f"Rendering {idx*scenes_per_iteration + jdx + 1}/{total_scenes}")
             filepath = os.path.join(launching_folder, filename)
-            os.system(f"blenderproc run {os.path.join(os.path.dirname(__file__), 'alt3_1_render_objfile_blenderproc.py')} --filepath {filepath} --target_folder {target_folder} --texture_folder {texture_folder}")
+            os.system(f"blenderproc run {os.path.join(os.path.dirname(__file__), 'common3_1_render_objfile_blenderproc.py')} --filepath {filepath} --target_folder {target_folder} --texture_folder {texture_folder}")
             time.sleep(0.3)

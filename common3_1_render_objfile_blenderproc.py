@@ -48,7 +48,7 @@ lights = []
 #광원 배치 : 1개부터 5개까지 랜덤
 for _ in range(random.randint(1, 5)):
     theta = 2*math.pi*random.random()
-    phi = 70*deg + (15*deg)*random.random()
+    phi = 40*deg + (50*deg)*random.random()
     dist = 1.8 + 2.5*random.random()
     lights.append(bproc.types.Light())
     lights[-1].set_type("POINT")
@@ -63,8 +63,11 @@ if CAMERA == "RealSense":
                 [0, 0, 1]])
     bproc.camera.set_intrinsics_from_K_matrix(K, 640, 480) #Intel RealSense
 elif CAMERA == "ZED":
-    K = np.array([[676.5935668945312, 0, 609.4650268554688],
-                [0, 676.5935668945312, 366.338134765625],
+    # K = np.array([[676.5935668945312, 0, 609.4650268554688],
+    #             [0, 676.5935668945312, 366.338134765625],
+    #             [0, 0, 1]])
+    K = np.array([[676.5935668945312, 0, 640],
+                [0, 676.5935668945312, 360],
                 [0, 0, 1]])
     bproc.camera.set_intrinsics_from_K_matrix(K, 1280, 720) #ZED
 
@@ -107,6 +110,9 @@ data = bproc.renderer.render()
 data["pc"] = [points]
 data["grasps_tf"] = [grasps_tf]
 data["grasps_scores"] = [grasps_scores]
+data["extrinsic"] = [camera_extrinsic]
+filepath_np = np.array([ord(char) for char in filepath], np.uint8)
+data["original_obj_file"] = [filepath_np]
 
 bproc.writer.write_hdf5(target_folder, data, True)
 bproc.clean_up(True)
