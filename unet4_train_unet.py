@@ -21,21 +21,21 @@ if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True) # allow memory growth
 
-    OPTION = input("처음부터 학습 시작시 s 입력, 기존 모델 불러오기 시 l 입력 : ")
+    OPTION = input("input 's' if you want start from scratch, 'l' if you want to continue (not implemented): ")
     if OPTION == "s":
         print("--- No model directory provided. Training from scratch ---")
 
         # set model dirs
-        model_name = input("새 모델 이름 입력 (unet_checkpoints 폴더 안에 저장됨. 해당 폴더가 없으면 만들어짐.): ")
+        model_name = input("Input the name of the new model (will be stored in the folder 'unet_checkpoints'):  ")
         model_dir = os.path.join(ROOT_DIR, os.path.join("unet_checkpoints", model_name))
 
         # load the model architecture
-        architecture_source_path = input("모델 구조 소스코드 경로 입력 (unet_architecture 폴더 안에 있어야 함.): ")
+        architecture_source_path = input("Input the directory of the source file of model architecture (must be in 'unet_architecture' folder) : ")
         architecture_name = os.path.basename(architecture_source_path).replace(".py","")
         arch = importlib.import_module(f"unet_architecture.{architecture_name}")
 
         # Load HyperParameter saved in yml file
-        with open(input("불러올 하이퍼파라미터 : "), 'r') as f:
+        with open(input("Input the directory of hyperparameter config file : "), 'r') as f:
             hyperparameters = yaml.safe_load(f)
         BC = hyperparameters["BC"]
         LR = hyperparameters["LR"]
@@ -49,7 +49,7 @@ if __name__ == '__main__':
         print("Directory: ", model_dir, ". Created")
 
         init_epoch = 0
-    #TODO: 나중에 시간 있을 때.
+    #TODO: Whenever I have a free time
     # elif OPTION == "l":
     #     saved_model_dir = input("학습된 모델의 디렉토리 입력 : ")
     #     print(f"--- Continuing training from: {saved_model_dir} ---")
@@ -64,8 +64,8 @@ if __name__ == '__main__':
     #     EPOCHS = hyperparameters["EPOCHS"]
     #     init_epoch = int(input("시작 시의 Epoch 횟수 입력, -1 입력시 기존 Epoch 횟수에서 시작 : "))
     else:
-        print("잘못된 값 입력, 프로그램 종료.")
-        exit()
+        print("Invalid input. exiting program.")
+        exit(1)
 
     
     #################

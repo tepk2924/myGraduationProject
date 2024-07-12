@@ -27,8 +27,7 @@ hdf5scenes_generated/
 texture_dataset
 texture_dataset/
 test.py
-unet_checkpoints
-unet_checkpoints/
+unet_checkpoints/*
 simple_objects
 simple_objects/
 ros_ws/src/zed-ros-wrapper
@@ -36,3 +35,4 @@ ros_ws/build
 ros_ws/devel
 ros_ws/src/drivers
 .vscode
+sgnet_checkpoints/*

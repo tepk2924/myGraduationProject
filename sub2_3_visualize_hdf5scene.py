@@ -47,8 +47,8 @@ if __name__ == "__main__":
                                            [0, 0, 0, 1]], dtype=np.float32))
     original_obj.apply_transform(camera_inverse)
     scene.add_geometry(original_obj)
-    point_cloud_augmented = np.concatenate((point_cloud, np.ones((point_cloud.shape[0], 1), dtype=np.float32)), axis=-1).T
-    point_cloud_reformatted = ((camera_inverse@point_cloud_augmented).T)[:, :3]
+    point_cloud_1padded = np.concatenate((point_cloud, np.ones((point_cloud.shape[0], 1), dtype=np.float32)), axis=-1).T
+    point_cloud_reformatted = ((camera_inverse@point_cloud_1padded).T)[:, :3]
     pc_scene = trimesh.PointCloud(point_cloud_reformatted, color_r)
     [plot_grasp(scene, camera_inverse@one_grasp_tf) for one_grasp_tf in grasps_tf]
     scene.add_geometry(pc_scene)
