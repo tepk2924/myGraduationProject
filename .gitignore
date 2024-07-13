@@ -9,12 +9,12 @@ checkpoints
 sample_objects
 scenes_generated
 successful_grasp
+successful_grasp_old
 venv
 __pycache__/*
 checkpoints/*
 sample_objects/*
 scenes_generated/*
-successful_grasp/*
 venv/*
 *.so
 *.o
@@ -36,3 +36,4 @@ ros_ws/devel
 ros_ws/src/drivers
 .vscode
 sgnet_checkpoints/*
+IPA-3D1K

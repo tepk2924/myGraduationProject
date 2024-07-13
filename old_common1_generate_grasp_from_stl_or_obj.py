@@ -14,7 +14,7 @@ from os import close, path, walk
 import common1_1_suction_cup_logic as scl
 import common1_2_suction_cup_lib as sclib
 from trimeshVisualize import Scene
-from common1_4_graspdata import GraspData
+from old_common1_4_graspdata import GraspData
 
 def main(num_of_files, number_of_points = 600):
 
