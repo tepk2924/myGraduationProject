@@ -2,13 +2,13 @@ __pycache__/
 checkpoints/
 sample_objects/
 scenes_generated/
-successful_grasp/
 venv/
 __pycache__
 checkpoints
 sample_objects
 scenes_generated
-successful_grasp
+STEP1_pklgrasp_generated
+STEP2_pklscene_generated
 successful_grasp_old
 venv
 __pycache__/*
@@ -22,8 +22,7 @@ BlenderProc
 BlenderProc/
 objscenes_generated
 objscenes_generated/
-hdf5scenes_generated
-hdf5scenes_generated/
+STEP3_hdf5scene_generated
 texture_dataset
 texture_dataset/
 test.py

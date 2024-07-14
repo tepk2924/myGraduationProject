@@ -546,7 +546,7 @@ class SceneDatasetGenerator():
                 obj_filepaths_list.append(obj_name[:-8])
 
         scenedata = SceneData(obj_filepaths_list, obj_poses_list, scene_grasps_tf, scene_grasps_scores)
-        with open(os.path.join(self._save_dir, f"{scene_id}.pkl"), "wb") as f:
+        with open(os.path.join(self._save_dir, f"pklscene_{scene_id}.pkl"), "wb") as f:
             pickle.dump(scenedata, f)
 
 if __name__ == "__main__":

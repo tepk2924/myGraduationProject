@@ -19,7 +19,7 @@ from common1_4_graspdata import GraspData
 def main(num_of_files, number_of_points = 600):
 
     """
-    IPA_3D1K 폴더 안에 있는 아무 .obj 형태의 mesh+texture를 골라서 평가하여 지정한 폴더에 .pkl로 저장
+    inspect ipa-3d1k_models3d folder, convert mesh & texture in the form of .obj + .png, evaluate them and save them as pickle file
     ----------
     """
 
@@ -54,7 +54,7 @@ def main(num_of_files, number_of_points = 600):
         obj_model, n_processors=8, number_of_points=number_of_points, multiprocessing=True)
             results = evaluation_object.evaluate_model(display=False)
             if len(results["tf"]) <= 10:
-                print("형성된 grasp의 갯수가 충분하지 않음!")
+                print("not enough grasps generated!")
                 raise ValueError
             #Since the 4x4 tf matrix is in millimeter, we then convert the result back into meter unit.
             results["tf"][:, :3, 3] /= 1000
@@ -63,13 +63,13 @@ def main(num_of_files, number_of_points = 600):
             scalar = 0.001
             scalemat = trimesh.transformations.scale_matrix(scalar)
             mesh.apply_transform(scalemat)
-            #GraspData 클래스를 생성해서 mesh와 mesh의 grasp 정보, 약간의 메타데이터를 담는다.
+
             graspdata = GraspData(mesh, obj_path, results, meta_data)
             idx = random.randint(0, (1<<32) - 1)
             with open(os.path.join(target_folder, f"pklgrasp_{idx:08x}.pkl"), "wb") as f:
                 pickle.dump(graspdata, f)
             success += 1
-            print(f"총 {success}개의 파일 생성함")
+            print(f"{success} files generated")
         except KeyboardInterrupt:
             raise KeyboardInterrupt
         except ValueError as e:
@@ -82,6 +82,6 @@ def main(num_of_files, number_of_points = 600):
     print("-------------------------------")
 
 if __name__ == "__main__":
-    num_of_files = int(input("생성할 pkl 파일의 갯수 : "))
-    number_of_points = int(input("테스트할 포인트의 갯수 : "))
+    num_of_files = int(input("number of .pkl files you want to generate : "))
+    number_of_points = int(input("point number : "))
     main(num_of_files, number_of_points=number_of_points)
