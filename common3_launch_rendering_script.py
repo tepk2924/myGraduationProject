@@ -2,11 +2,15 @@ import os
 import time
 
 if __name__ == "__main__":
-    launching_folder = input("objscene과 npzgrasp이 들어있는 폴더 선택 : ")
-    target_folder = input("저장할 폴더 : ")
-    texture_folder = input("텍스쳐 3종류가 들어있는 폴더 : ")
-    iterations = int(input("같은 objscene 파일에서 렌더링할 횟수 : "))
-    filenames = [filename for filename in os.listdir(launching_folder) if filename[-4:] == ".obj"]
+    # launching_folder = input("directory of the folder containing pklscenes : ")
+    launching_folder = "/home/tepk2924/tepk2924Works/myGraduationProject/pklscenes_generated/test"
+    # target_folder = input("target folder directory : ")
+    target_folder = "/home/tepk2924/tepk2924Works/myGraduationProject/hdf5scenes_generated/ZED/test"
+    # texture_folder = input("texture folder containing textures (invalid, background) : ")
+    texture_folder = "/home/tepk2924/tepk2924Works/myGraduationProject/texture_dataset/test"
+    # iterations = int(input("multiple rendering from single pklscene : "))
+    iterations = 1
+    filenames = [filename for filename in os.listdir(launching_folder) if filename[-4:] == ".pkl"]
 
     scenes_per_iteration = len(filenames)
     total_scenes = scenes_per_iteration*iterations

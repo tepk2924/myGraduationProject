@@ -11,12 +11,6 @@ def plot_grasp(scene: trimesh.Scene,
     cyl.apply_transform(grasp_tf)
     scene.add_geometry(cyl)
 
-# def plot_grasp(scene: trimesh.Scene,
-#                grasp_tf: np.ndarray):
-#     pt = creation.uv_sphere(0.002)
-#     pt.apply_translation(grasp_tf[:3, 3])
-#     scene.add_geometry(pt)
-
 if __name__ == "__main__":
     with h5py.File(input("Directory : "), "r") as f:
         segmap = np.array(f["category_id_segmaps"]) #(image_height, image_width), np.int64
@@ -26,7 +20,13 @@ if __name__ == "__main__":
         extrinsic = np.array(f["extrinsic"])
         grasps_tf = np.array(f["grasps_tf"])
         grasps_scores = np.array(f["grasps_scores"])
-        obj_file_path_np = np.array(f["original_obj_file"])
+        original_obj_paths_np = np.array(f["original_obj_paths"])
+        obj_poses = np.array(f["obj_poses"])
+
+    grasps_tf = np.array([[0, 1, 0, 0],
+                          [-1, 0, 0, 0],
+                          [0, 0, 1, 0],
+                          [0, 0, 0, 1]]) @ grasps_tf
 
     OPTION = input("real or segmap : ")
     color_r = (np.concatenate((colors.reshape((-1, 3)), 255*np.ones((colors.shape[0]*colors.shape[1], 1), dtype=np.uint8)), axis=-1) if OPTION == "real" else
@@ -34,19 +34,9 @@ if __name__ == "__main__":
                np.tile(np.array([[0, 0, 0, 255]], dtype=np.uint8), (colors.shape[0]*colors.shape[1], 1)))
     scene = trimesh.Scene()
     camera_inverse = np.linalg.inv(extrinsic)
-    obj_file_path = "".join([chr(ords) for ords in obj_file_path_np.tolist()])
-    print(obj_file_path)
-    original_obj = trimesh.load(obj_file_path, "obj")
-    original_obj.apply_transform(np.array([[0, 0, 1, 0],
-                                           [1, 0, 0, 0],
-                                           [0, 1, 0, 0],
-                                           [0, 0, 0, 1]], dtype=np.float32))
-    original_obj.apply_transform(np.array([[0, 1, 0, 0],
-                                           [-1, 0, 0, 0],
-                                           [0, 0, 1, 0],
-                                           [0, 0, 0, 1]], dtype=np.float32))
-    original_obj.apply_transform(camera_inverse)
-    scene.add_geometry(original_obj)
+
+    original_obj_paths = list(map(lambda x: str(x)[2:-1], original_obj_paths_np.tolist()))
+
     point_cloud_1padded = np.concatenate((point_cloud, np.ones((point_cloud.shape[0], 1), dtype=np.float32)), axis=-1).T
     point_cloud_reformatted = ((camera_inverse@point_cloud_1padded).T)[:, :3]
     pc_scene = trimesh.PointCloud(point_cloud_reformatted, color_r)
@@ -54,5 +44,4 @@ if __name__ == "__main__":
     scene.add_geometry(pc_scene)
     scene.add_geometry(creation.axis(0.04))
 
-    print(point_cloud)
     scene.show()

@@ -18,13 +18,14 @@ if __name__ == "__main__":
     with open(file_loc, "rb") as f:
         scenedata:SceneData = pickle.load(f)
     
-    pklgrasp_dir_list = scenedata.pklgrasp_dir
+    obj_file_list = scenedata.obj_file_list
     obj_poses = scenedata.obj_poses
     grasps_tf = scenedata.grasps_tf
     grasps_score = scenedata.grasps_score
 
-    for pklgrasp_dir, pose in zip(pklgrasp_dir_list, obj_poses):
-        mesh = trimesh.load(pklgrasp_dir)
+    for obj_path, pose in zip(obj_file_list, obj_poses):
+        print(obj_path)
+        mesh = trimesh.load(obj_path)
         mesh.apply_transform(pose)
         my_scene.plot_mesh(mesh)
 

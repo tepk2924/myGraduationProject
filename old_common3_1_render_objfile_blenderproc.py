@@ -1,17 +1,10 @@
 import blenderproc as bproc
-from blenderproc.python.types import MeshObjectUtility
-from typing import List
 import argparse
 import bpy
 import numpy as np
 import random
 import math
 import os
-import pickle
-import sys
-sys.path.append(os.path.dirname(__file__))
-
-from common2_1_scenedata import SceneData
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--filepath', type=str)
@@ -23,32 +16,15 @@ filepath = args.filepath
 target_folder = args.target_folder
 texture_folder = args.texture_folder
 
-with open(filepath, "rb") as f:
-    scenedata:SceneData = pickle.load(f)
-
-grasps_tf = scenedata.grasps_tf
-grasps_scores = scenedata.grasps_score
-obj_file_list = scenedata.obj_file_list
-obj_poses = scenedata.obj_poses
-
-obj_poses = np.concatenate((obj_poses, np.array([[[1, 0, 0, 0],
-                                                  [0, 1, 0, 0],
-                                                  [0, 0, 1, 0],
-                                                  [0, 0, 0, 1]]])), axis=0)
-
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
-objs: List[MeshObjectUtility.MeshObject] = []
-for obj_file_path in obj_file_list:
-    objs += bproc.loader.load_obj(obj_file_path)
-
-objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "table.obj"))
-
-for obj in objs:
-    print(f"{obj.get_name() = }")
+objs = bproc.loader.load_obj(filepath)
+with np.load(filepath.replace(".obj", ".npz")) as grasp_data:
+    grasps_tf = grasp_data["scene_grasps_tf"]
+    grasps_scores = grasp_data["scene_grasps_scores"]
 
 obj_tags = []
-for obj, pose in zip(objs, obj_poses):
+for obj in objs:
     obj_name = obj.get_name()
     if obj_name == "table":
         obj_tag = "background"
@@ -56,34 +32,28 @@ for obj, pose in zip(objs, obj_poses):
         obj_tag = random.choice(["invalid", "valid"])
     if obj_tag == "background":
         obj.set_cp("category_id", 0)
-        texture_folder_tagged = os.path.join(texture_folder, "background")
-        texture_filename = random.choice(os.listdir(texture_folder_tagged))
-        obj.add_material(bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename))
     elif obj_tag == "invalid":
         obj.set_cp("category_id", 1)
-        texture_folder_tagged = os.path.join(texture_folder, "invalid")
-        texture_filename = random.choice(os.listdir(texture_folder_tagged))
-        obj.set_material(0, bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename))
-    else: #valid
+    else:
         obj.set_cp("category_id", 2)
-    obj.apply_T(np.array([[0, 1, 0, 0],
-                          [0, 0, 1, 0],
-                          [1, 0, 0, 0],
-                          [0, 0, 0, 1]]))
-    obj.apply_T(pose)
+    texture_folder_tagged = os.path.join(texture_folder, obj_tag)
+    texture_filename = random.choice(os.listdir(texture_folder_tagged))
+    mat = bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename)
+    obj.add_uv_mapping(projection="cube")
+    obj.add_material(mat)
 
 deg = math.pi/180
 lights = []
 
 #광원 배치 : 1개부터 5개까지 랜덤
-for _ in range(light_num := random.randint(1, 5)):
+for _ in range(random.randint(1, 5)):
     theta = 2*math.pi*random.random()
-    phi = 20*deg + (70*deg)*random.random()
+    phi = 40*deg + (50*deg)*random.random()
     dist = 1.8 + 2.5*random.random()
     lights.append(bproc.types.Light())
     lights[-1].set_type("POINT")
     lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
-    lights[-1].set_energy(250/light_num + 250*random.random()/light_num)
+    lights[-1].set_energy(250 + 250*random.random())
 
 CAMERA = "ZED"
 
@@ -127,6 +97,13 @@ points = bproc.camera.pointcloud_from_depth(depth)
 points = points.reshape(-1, 3)
 points = np.float32(points)
 
+
+grasps_tf[:, :3, 3] /= 1000
+rotation = np.array([[0, 1, 0],
+                    [-1, 0, 0],
+                    [0, 0, 1]], dtype=float)
+grasps_tf[:, :3, :] = np.matmul(rotation, grasps_tf[:, :3, :])
+
 bproc.renderer.enable_segmentation_output(map_by=["category_id"])
 bproc.renderer.enable_depth_output(activate_antialiasing=False)
 data = bproc.renderer.render()
@@ -134,8 +111,8 @@ data["pc"] = [points]
 data["grasps_tf"] = [grasps_tf]
 data["grasps_scores"] = [grasps_scores]
 data["extrinsic"] = [camera_extrinsic]
-data["original_obj_paths"] = [np.array(obj_file_list, dtype=np.string_)]
-data["obj_poses"] = [obj_poses[:-1, :, :]]
+filepath_np = np.array([ord(char) for char in filepath], np.uint8)
+data["original_obj_file"] = [filepath_np]
 
 bproc.writer.write_hdf5(target_folder, data, True)
 bproc.clean_up(True)
