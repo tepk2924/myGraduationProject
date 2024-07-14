@@ -9,6 +9,7 @@ import signal
 import pickle
 import os
 
+from trimesh import creation
 from typing import Dict, List
 from os import walk
 # from trimesh.permutate import transform
@@ -76,7 +77,7 @@ class Scene(object):
         #octomap, python-fcl 설치 필요
         self.collision_manager = trimesh.collision.CollisionManager()
 
-    def add_object(self, obj_id, obj_mesh, pose, support=False):
+    def add_object(self, obj_id, obj_mesh:trimesh.base.Trimesh, pose, support=False):
         """
         Scene에 Mesh를 추가하는 메소드
         --------------
@@ -111,12 +112,12 @@ class Scene(object):
         )
         return inplane_rot.dot(stable_poses[index])
 
-    def _get_support_polygons(self, min_area=10000.0, gravity=np.array([0, 0, -1.0]), erosion_distance=0.02):
+    def _get_support_polygons(self, min_area=0.01, gravity=np.array([0, 0, -1.0]), erosion_distance=0.02):
         """
         Extract support facets by comparing normals with gravity vector and checking area.
         ----------------
         Args:
-            min_area (float, optional): Minimum area of support facets [mm^2]. Defaults to 0.01*1_000_000.
+            min_area (float, optional): Minimum area of support facets [m^2]. Defaults to 0.01.
             gravity ([np.ndarray], optional): Gravity vector in scene coordinates. Defaults to np.array([0, 0, -1.0]).
             erosion_distance (float, optional): Clearance from support surface edges. Defaults to 0.02.
         Returns:
@@ -176,7 +177,7 @@ class Scene(object):
 
 class TableScene(Scene):
     
-    def __init__(self, data_dir, lower_table=0.02):
+    def __init__(self, data_dir, lower_table=0.00002):
         """
         Scene의 자식 글래스. Mesh를 올려놓을 테이블을 하나 가정함.
         --------------
@@ -187,9 +188,9 @@ class TableScene(Scene):
 
         super().__init__()
 
-        tf = trimesh.transformations.translation_matrix(np.array([0,0, 0.6]))
-        self.gripper_mesh = trimesh.primitives.Cylinder(radius=0.1, height=1, transform = tf)
-        self.gripper_mesh = trimesh.Trimesh(self.gripper_mesh.vertices, self.gripper_mesh.faces, self.gripper_mesh.face_normals)
+        tf = trimesh.transformations.translation_matrix(np.array([0, 0, 0.017]))
+        #If this gripper mesh is too small (such as being radius ~ 0.001 and height ~ 0.001), segmentation fault (core dumped) happens.
+        self.gripper_mesh = creation.cylinder(radius=0.001, height=0.03, transform=tf)
         print("Gripper mesh loaded")
 
         # Table
@@ -310,7 +311,7 @@ class TableScene(Scene):
 
         return not colliding, placement_T if not colliding else None
 
-    def is_colliding(self, mesh, transform, eps=1e-3):
+    def is_colliding(self, mesh, transform, eps=1e-6):
         """
         Whether given mesh collides with scene
         --------------
@@ -323,11 +324,6 @@ class TableScene(Scene):
         Returns:
             [bool] -- colliding or not
         """
-        #이 함수에 의해 세그멘테이션 오류 발생하는 문제가 있었음
-        #정확히 말하자면, 각 오브젝트들의 올바른 방향을 찾기 위해 mesh 인자로 일반적인 mesh를 넣어서 이 함수를 부를 때는 아무 문제가 없지만,
-        #오브젝트들의 grasp를 필터링하는 과정에서 is_colliding을 부를 때 mesh 인자로 self.gripper_path로 primitive한 원기둥을 넣어서 이 함수를 부를 때, min_distance_single 메소드 호풀시 세그멘테이션 오류가 발생한다.
-        #일단 저 primitive한 원기둥을 일반적인 mesh 오브젝트로 변환하는 방법을 생각해 봐야겠군.
-        #어.... 진짜 실행은 되었다. 뭐임?
         dist = self.collision_manager.min_distance_single(
             mesh, transform=transform)
         return dist < eps
@@ -356,7 +352,6 @@ class TableScene(Scene):
 
         self._support_objects.append(self.table_support)
 
-        object_filepaths = []
         object_transforms = []
         object_grasps = []
         total_success = 0
@@ -365,7 +360,6 @@ class TableScene(Scene):
         while total_success < num_obj and total_attempt < 2*num_obj:
             total_attempt += 1
             obj_filepath, obj_mesh, obj_grasp = self.get_random_object()
-            #print(f"{obj_name} 배치 시도 중")
             signal.signal(signal.SIGALRM, self.handler)
             signal.alarm(10)
             try:
@@ -380,16 +374,16 @@ class TableScene(Scene):
                 continue
             signal.alarm(0)
             if success:
-                self.add_object(obj_filepath, obj_mesh, placement_T)
+                anonymous = f"{random.randint(0, (1 << 32) - 1):08x}"
+                obj_name = obj_filepath + anonymous
+                self.add_object(obj_name, obj_mesh, placement_T)
                 # obj_scales.append(
                 #     float(random_grasp_path.split('_')[-1].split('.h5')[0]))
-                object_filepaths.append(obj_filepath)
                 object_transforms.append(placement_T)
                 object_grasps.append(obj_grasp)
                 total_success += 1
             else:
                 print("Couldn't place object"," after {} iterations!".format(max_iter))
-        #print('Placed {} objects'.format(len(object_names)))
 
         scene_filtered_grasps = []
         scene_filtered_scores = []
@@ -403,6 +397,7 @@ class TableScene(Scene):
             transformed_obj_grasp["scores"] = list(transformed_obj_grasp["scores"])
 
             filtered_grasps = self._filter_colliding_grasps(transformed_obj_grasp)
+
             scene_filtered_grasps.append(filtered_grasps["tf"])
             scene_filtered_scores.append(filtered_grasps["scores"])
             grasp_count += len(filtered_grasps["tf"])
@@ -418,7 +413,7 @@ class TableScene(Scene):
         self.set_mesh_transform('table', self._table_pose)
 
         # return scene_filtered_grasps, scene_filtered_scores, object_names, object_transforms, obj_grasp_idcs
-        return scene_filtered_grasps, scene_filtered_scores, self._objects, self._poses, object_filepaths
+        return scene_filtered_grasps, scene_filtered_scores, self._objects, self._poses
 
     def set_mesh_transform(self, name, transform):
         """
@@ -489,9 +484,10 @@ class SceneDatasetGenerator():
 
         
         try:
-            scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses, obj_filepaths = table_scene.arrange(num_objects, self._max_iterations)
-            self.save_scene(scene_id, scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses, obj_filepaths)
-            print(f"Created {scene_id} with {len(obj_meshes) - 1} objects, time taken {time.time()-start_time:.2f}secs ({(len(os.listdir(self._save_dir)) - self._initial_file_num)//2}/{self._number_of_scenes_generating})")
+            scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses= table_scene.arrange(num_objects, self._max_iterations)
+            print(f"Arrange Finished for scene {scene_id}")
+            self.save_scene(scene_id, scene_grasps_tf, scene_grasps_scores, obj_meshes, obj_poses)
+            print(f"Created {scene_id} with {len(obj_meshes) - 1} objects, time taken {time.time()-start_time:.2f}secs ({(len(os.listdir(self._save_dir)) - self._initial_file_num)}/{self._number_of_scenes_generating})")
             return True
         
         except KeyboardInterrupt:
@@ -532,8 +528,7 @@ class SceneDatasetGenerator():
                 scene_grasps_tf,
                 scene_grasps_scores,
                 obj_meshes: Dict[str, trimesh.base.Trimesh],
-                obj_poses_dict: Dict[str, np.ndarray],
-                obj_filepaths: List[str]):
+                obj_poses_dict: Dict[str, np.ndarray]):
         """
         지정된(self._save_dir) 폴더에 scene 저장하는 메소드
         --------------
@@ -542,54 +537,15 @@ class SceneDatasetGenerator():
         scene_grasps_tf {list} : A list of grasps "tf".
         scene_grasps_scores {list} : A corresponding list of scores for individual grasps.
         """
-        # print("scene 세이브 중...")
-        # scene_info = {}
-        # scene_info["scene_grasps_tf"] = scene_grasps_tf
-        # scene_info["scene_grasps_scores"] = scene_grasps_scores
-        # scene_info["object_names"] = object_names
-        # scene_info["obj_transforms"] = obj_transforms
-        # scene_info["obj_grasp_idcs"] = np.array(obj_grasp_idcs)
-        # output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
-        # while os.path.exists(output_path):
-        #     self._scene_count += 1
-        #     output_path = os.path.join(self._save_dir, f"{scene_id}.npz")
-        # np.savez(output_path, **scene_info)
         obj_names = obj_poses_dict.keys()
         obj_poses_list = []
+        obj_filepaths_list = []
         for obj_name in obj_names:
-            obj_poses_list.append(obj_poses_dict[obj_name])
+            if obj_name != 'table':
+                obj_poses_list.append(obj_poses_dict[obj_name])
+                obj_filepaths_list.append(obj_name[:-8])
 
-        # extension = ".obj"
-        # with open(os.path.join(self._save_dir, scene_id + extension), "w") as f:
-        #     acc = 0
-        #     for obj_name in obj_names:
-        #         mesh = obj_meshes[obj_name]
-
-        #         pose = np.array(obj_poses[obj_name])
-
-        #         vertices = np.array(mesh.vertices).T
-        #         vertices = np.pad(vertices, ((0, 1), (0, 0)), 'constant', constant_values=1)
-        #         normals = np.array(mesh.vertex_normals).T
-        #         faces = np.array(mesh.faces)
-
-        #         vertices_transformed = (pose @ vertices).T
-        #         normals_transformed = (pose[:3, :3] @ normals).T
-
-        #         f.write(f"o {obj_name}\n")
-        #         for vertex in vertices_transformed:
-        #             f.write(f"v {vertex[1]/1000:.6f} {vertex[2]/1000:.6f} {vertex[0]/1000:.6f}\n")
-        #         for normal in normals_transformed:
-        #             f.write(f"vn {normal[1]:.4f} {normal[2]:.4f} {normal[0]:.4f}\n")
-        #         for face in faces:
-        #             f.write(f"f {face[0] + 1 + acc}//{face[0] + 1 + acc} {face[1] + 1 + acc}//{face[1] + 1 + acc} {face[2] + 1 + acc}//{face[2] + 1 + acc}\n")
-        #         acc += len(vertices_transformed)
-        # scene_info = {}
-        # scene_info["scene_grasps_tf"] = scene_grasps_tf
-        # scene_info["scene_grasps_scores"] = scene_grasps_scores
-        # extension = ".npz"
-        # np.savez(os.path.join(self._save_dir, scene_id + extension), **scene_info)
-
-        scenedata = SceneData(obj_filepaths, obj_poses_list, scene_grasps_tf, scene_grasps_scores)
+        scenedata = SceneData(obj_filepaths_list, obj_poses_list, scene_grasps_tf, scene_grasps_scores)
         with open(os.path.join(self._save_dir, f"{scene_id}.pkl"), "wb") as f:
             pickle.dump(scenedata, f)
 

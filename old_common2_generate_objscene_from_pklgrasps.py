@@ -364,7 +364,7 @@ class TableScene(Scene):
         while total_success < num_obj and total_attempt < 2*num_obj:
             total_attempt += 1
             obj_name, obj_mesh, obj_grasp = self.get_random_object()
-            #print(f"{obj_name} 배치 시도 중")
+            print(f"{obj_name} 배치 시도 중")
             signal.signal(signal.SIGALRM, self.handler)
             signal.alarm(10)
             try:
@@ -388,7 +388,7 @@ class TableScene(Scene):
                 total_success += 1
             else:
                 print("Couldn't place object"," after {} iterations!".format(max_iter))
-        #print('Placed {} objects'.format(len(object_names)))
+        print('Placed {} objects'.format(len(object_names)))
 
         scene_filtered_grasps = []
         scene_filtered_scores = []
@@ -400,6 +400,9 @@ class TableScene(Scene):
             # Expand first dimension to list of np arrays
             transformed_obj_grasp["tf"] = list(transformed_obj_grasp["tf"])
             transformed_obj_grasp["scores"] = list(transformed_obj_grasp["scores"])
+
+            print(len(transformed_obj_grasp["tf"]))
+            print(transformed_obj_grasp["tf"][0])
 
             filtered_grasps = self._filter_colliding_grasps(transformed_obj_grasp)
             scene_filtered_grasps.append(filtered_grasps["tf"])

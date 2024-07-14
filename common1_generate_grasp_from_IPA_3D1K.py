@@ -60,8 +60,11 @@ def main(num_of_files, number_of_points = 600):
             results["tf"][:, :3, 3] /= 1000
             meta_data = {"number_of_points" : number_of_points,
                          "number_of_grasps" : len(results["tf"])}
+            scalar = 0.001
+            scalemat = trimesh.transformations.scale_matrix(scalar)
+            mesh.apply_transform(scalemat)
             #GraspData 클래스를 생성해서 mesh와 mesh의 grasp 정보, 약간의 메타데이터를 담는다.
-            graspdata = GraspData(obj_path, results, meta_data)
+            graspdata = GraspData(mesh, obj_path, results, meta_data)
             idx = random.randint(0, (1<<32) - 1)
             with open(os.path.join(target_folder, f"pklgrasp_{idx:08x}.pkl"), "wb") as f:
                 pickle.dump(graspdata, f)

@@ -37,3 +37,4 @@ ros_ws/src/drivers
 .vscode
 sgnet_checkpoints/*
 IPA-3D1K
+pklscenes_generated
