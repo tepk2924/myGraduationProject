@@ -64,7 +64,7 @@ def main(num_of_files, number_of_points = 600):
             scalemat = trimesh.transformations.scale_matrix(scalar)
             mesh.apply_transform(scalemat)
 
-            graspdata = GraspData(mesh, obj_path, results, meta_data)
+            graspdata = GraspData(obj_path, results, meta_data)
             idx = random.randint(0, (1<<32) - 1)
             with open(os.path.join(target_folder, f"pklgrasp_{idx:08x}.pkl"), "wb") as f:
                 pickle.dump(graspdata, f)
