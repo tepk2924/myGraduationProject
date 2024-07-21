@@ -31,8 +31,13 @@ def main(num_of_files, number_of_points = 600):
 
     while success < num_of_files:
         try:
-            obj_subfolderpath = os.path.join(obj_folder, random.choice(os.listdir(obj_folder)))
-            obj_path = os.path.join(obj_subfolderpath, "model3d_textured.obj")
+            obj_subfolderpath = os.path.join(obj_folder, random.choice([item for item in os.listdir(obj_folder) if item[-3:] == "10K"]))
+            filenames = os.listdir(obj_subfolderpath)
+            for name in filenames:
+                if name[-4:] == ".obj":
+                    filename = name
+                    break
+            obj_path = os.path.join(obj_subfolderpath, filename)
             print(f"-----Evaluating {os.path.basename(obj_subfolderpath)}----")
             mesh = trimesh.load(obj_path)
             # if not mesh.is_watertight:

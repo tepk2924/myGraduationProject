@@ -63,7 +63,9 @@ for obj, pose in zip(objs, obj_poses):
         obj.set_cp("category_id", 1)
         texture_folder_tagged = os.path.join(texture_folder, "invalid")
         texture_filename = random.choice(os.listdir(texture_folder_tagged))
-        obj.set_material(0, bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename))
+        mat = bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename)
+        mat.set_displacement_from_principled_shader_value("Base Color", multiply_factor=-2.0)
+        obj.set_material(0, mat)
     else: #valid
         obj.set_cp("category_id", 2)
     obj.apply_T(np.array([[0, 1, 0, 0],
@@ -100,6 +102,8 @@ elif CAMERA == "ZED":
                 [0, 676.5935668945312, 360],
                 [0, 0, 1]])
     bproc.camera.set_intrinsics_from_K_matrix(K, 1280, 720) #ZED
+else:
+    raise Exception("What is this Camera?")
 
 deg = math.pi/180
 theta = 2*math.pi*random.random()
@@ -130,6 +134,13 @@ points = np.float32(points)
 bproc.renderer.enable_segmentation_output(map_by=["category_id"])
 bproc.renderer.enable_depth_output(activate_antialiasing=False)
 data = bproc.renderer.render()
+unnoised_color = data["colors"][0]
+if CAMERA == "RealSense":
+    noise = np.round(np.random.normal(0, 1.5, (480, 640, 3))).astype(np.int32)
+elif CAMERA == "ZED":
+    noise = np.round(np.random.normal(0, 1.5, (720, 1280, 3))).astype(np.int32)
+noised_color = np.clip(unnoised_color.astype(np.int32) + noise, 0, 255).astype(np.uint8)
+data["colors"] = [noised_color]
 data["pc"] = [points]
 data["grasps_tf"] = [grasps_tf]
 data["grasps_scores"] = [grasps_scores]

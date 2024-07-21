@@ -37,3 +37,8 @@ ros_ws/src/drivers
 sgnet_checkpoints/*
 IPA-3D1K
 pklscenes_generated
+DataSet
+DataSet.tar.gz
+blenderproc_test
+zed_test/*.npy
+zed_test/*.png
