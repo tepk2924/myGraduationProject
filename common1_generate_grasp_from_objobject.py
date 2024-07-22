@@ -16,7 +16,7 @@ import common1_2_suction_cup_lib as sclib
 from trimeshVisualize import Scene
 from common1_4_graspdata import GraspData
 
-def main(num_of_files, number_of_points = 600):
+def main(number_of_points = 600):
 
     """
     inspect ipa-3d1k_models3d folder, convert mesh & texture in the form of .obj + .png, evaluate them and save them as pickle file
@@ -26,12 +26,13 @@ def main(num_of_files, number_of_points = 600):
     start_time = time.time()
 
     success = 0
-    obj_folder = input("Please enter the directory of the ipa-3d1k_models3d folder containing subfolder containing .obj and .jpeg: ")
+    obj_folder = input("Please enter the directory of the dataset folder containing subfolder containing .obj and .jpeg: ")
+    subfoldername_list = os.listdir(obj_folder)
     target_folder = input("Please enter the directory of the folder to save the results in the form of .pkl files : ")
 
-    while success < num_of_files:
+    for subfoldername in subfoldername_list:
         try:
-            obj_subfolderpath = os.path.join(obj_folder, random.choice([item for item in os.listdir(obj_folder) if item[-3:] == "10K"]))
+            obj_subfolderpath = os.path.join(obj_folder, subfoldername)
             filenames = os.listdir(obj_subfolderpath)
             for name in filenames:
                 if name[-4:] == ".obj":
@@ -87,6 +88,5 @@ def main(num_of_files, number_of_points = 600):
     print("-------------------------------")
 
 if __name__ == "__main__":
-    num_of_files = int(input("number of .pkl files you want to generate : "))
     number_of_points = int(input("point number : "))
-    main(num_of_files, number_of_points=number_of_points)
+    main(number_of_points=number_of_points)
