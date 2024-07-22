@@ -28,9 +28,10 @@ def main(number_of_points = 600):
     success = 0
     obj_folder = input("Please enter the directory of the dataset folder containing subfolder containing .obj and .jpeg: ")
     subfoldername_list = os.listdir(obj_folder)
+    subfolderlen = len(subfoldername_list)
     target_folder = input("Please enter the directory of the folder to save the results in the form of .pkl files : ")
 
-    for subfoldername in subfoldername_list:
+    for idx, subfoldername in enumerate(subfoldername_list, start=1):
         try:
             obj_subfolderpath = os.path.join(obj_folder, subfoldername)
             filenames = os.listdir(obj_subfolderpath)
@@ -39,7 +40,7 @@ def main(number_of_points = 600):
                     filename = name
                     break
             obj_path = os.path.join(obj_subfolderpath, filename)
-            print(f"-----Evaluating {os.path.basename(obj_subfolderpath)}----")
+            print(f"-----Evaluating {os.path.basename(obj_subfolderpath)}({idx}/{subfolderlen})----")
             mesh = trimesh.load(obj_path)
             # if not mesh.is_watertight:
             #     print("Mesh is not watertight!")
