@@ -9,7 +9,6 @@ if __name__ == "__main__":
     texture_folder = input("texture folder containing textures (invalid, background) : ")
     # texture_folder = "/home/tepk2924/tepk2924Works/myGraduationProject/texture_dataset/test"
     iterations = int(input("multiple rendering from single pklscene : "))
-    iterations = 1
     filenames = [filename for filename in os.listdir(launching_folder) if filename[-4:] == ".pkl"]
 
     scenes_per_iteration = len(filenames)
