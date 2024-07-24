@@ -22,10 +22,10 @@ if __name__ == '__main__':
     tf.config.experimental.set_memory_growth(physical_devices[0], True) # allow memory growth
 
     plt.figure(figsize=(10, 6))
-    number_of_models = int(input("모델의 갯수 : "))
-    list_of_models_dir = [input(f"{i + 1}번째 모델의 디렉토리 입력 (unet_checkpoints 폴더 안에 있어야 함.): ") for i in range(number_of_models)]
-    target_hdf5folder = input("Test hdf5 파일이 들어있는 폴더의 디렉토리 입력 : ")
-    scene_number = int(input("hdf5scene 번호 입력 : "))
+    number_of_models = int(input("The number of models : "))
+    list_of_models_dir = [input(f"Directory of {i + 1}th model (must be in 'unet_checkpoints' folder): ") for i in range(number_of_models)]
+    target_hdf5folder = input("Directory of the folder containiing test hdf5scene files : ")
+    scene_number = int(input("The # of hdf5scene : "))
     plt.subplot(1, 3 + number_of_models, 1)
     with h5py.File(os.path.join(target_hdf5folder, f"{scene_number}.hdf5"), "r") as f:
         original_image = np.array(f["colors"])
@@ -59,7 +59,7 @@ if __name__ == '__main__':
     for i, saved_model_dir in enumerate(list_of_models_dir, start=1):
         saved_model_name = os.path.basename(saved_model_dir)
         saved_model_names.append(saved_model_name)
-        target_epoch = int(input(f"{i}번째 모델의 대상 Epoch 입력 : "))
+        target_epoch = int(input(f"Target epoch of {i}th model : "))
         if not os.path.isdir(saved_model_dir):
             raise ValueError('Model directory does not exist: {}'.format(saved_model_dir))
         log_dir = os.path.join(saved_model_dir, "logs")

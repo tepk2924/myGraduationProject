@@ -21,15 +21,15 @@ if __name__ == '__main__':
     physical_devices = tf.config.list_physical_devices('GPU')
     tf.config.experimental.set_memory_growth(physical_devices[0], True) # allow memory growth
 
-    saved_model_dir = input("저장된 모델의 디렉토리 입력 (unet_checkpoints 폴더 안에 있어야 함.): ")
+    saved_model_dir = input("Directory of the folder containing saved model (must be in the folder 'unet_checkpoints'): ")
     saved_model_name = os.path.basename(saved_model_dir)
-    target_epoch = int(input("대상 Epoch 입력 : "))
+    target_epoch = int(input("Target epoch : "))
 
     if not os.path.isdir(saved_model_dir):
         raise ValueError('Model directory does not exist: {}'.format(saved_model_dir))
     log_dir = os.path.join(saved_model_dir, "logs")
 
-    target_hdf5folder = input("Test hdf5 파일이 들어있는 폴더의 디렉토리 입력 : ")
+    target_hdf5folder = input("Directory of the folder containiing test hdf5scene files : ")
     arch = importlib.import_module(f"unet_checkpoints.{saved_model_name}.unet_architecture")
 
     test_dataset = arch.DataGenerator(target_hdf5folder)
@@ -60,7 +60,7 @@ if __name__ == '__main__':
     # evaluate the model
 
 
-    scene_number = int(input("hdf5scene 번호 입력 : "))
+    scene_number = int(input("The # of hdf5scene : "))
 
     RGBDE_normalized, gt_segmap_onehot = test_dataset[scene_number]
 
