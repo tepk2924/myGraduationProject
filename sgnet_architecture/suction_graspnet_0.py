@@ -4,7 +4,19 @@ import os
 import sys
 import h5py
 import numpy as np
+np.bool = np.bool_
+np.int = np.int_
+np.float = np.float_
+np.complex = np.complex_
+np.object = np.object_
+np.typeDict = np.sctypeDict
 import tensorflow as tf
+
+if __name__ == "__main__":
+    sys.path.append(os.path.dirname(os.path.dirname(__file__)))
+    import trimesh
+    from trimesh import creation
+    from trimesh import geometry
 
 from scipy.spatial.ckdtree import cKDTree
 from pnet2_layers.layers import Pointnet_SA, Pointnet_SA_MSG, Pointnet_FP
@@ -384,11 +396,8 @@ class DataGenerator(tf.keras.utils.Sequence):
         A data object that can be used to load scenes and generate point cloud batches for training .
         ----------
         Args:
-            data_dir {str}: The path to the data directory containing scenes meshes and grasps
-            batch_size {int}: Batch size (batch samples one scene from multiple random angles)
-        Keyword Args:
-            threshold {float}: The threshold for the ground truth scores. Valid grasps will be the ones that have the score higher than the threshold.
-            search_radius {float}: How for from the each point on point cloud we look for a valid grasp.
+            data_dir (str): The path to the data directory containing scenes meshes and grasps
+            hyperparameters (dict): various hyperparameters from YAML file, converted into dict
         ----------
         """
         self.data_dir = data_dir
@@ -447,6 +456,11 @@ class DataGenerator(tf.keras.utils.Sequence):
             grasps_tf = np.array(f["grasps_tf"])
             grasps_scores = np.array(f["grasps_scores"])
             # obj_file_path_np = np.array(f["original_obj_file"])
+        
+        grasps_tf = np.array([[0, 1, 0, 0],
+                              [-1, 0, 0, 0],
+                              [0, 0, 1, 0],
+                              [0, 0, 0, 1]]) @ grasps_tf
 
         camera_inverse = np.linalg.inv(extrinsic)
         point_cloud_1padded = np.concatenate((point_cloud, np.ones((point_cloud.shape[0], 1), dtype=np.float32)), axis=-1).T
@@ -471,7 +485,7 @@ class DataGenerator(tf.keras.utils.Sequence):
         selected_segmap_object_pts_idx = np.where(selected_segmap >= 1)
 
         positive_grasps_idx_mask = np.where(grasps_scores > self.threshold) #(num_of_positive_grasp)
-        positive_grasps_tf = grasps_tf_camera_frame[positive_grasps_idx_mask, :, :] #(num_of_positive_grasp, 4, 4)
+        positive_grasps_tf = grasps_tf_camera_frame[positive_grasps_idx_mask[0], :, :] #(num_of_positive_grasp, 4, 4)
         
         #vec [D, H, L] : translation of grasp, center of grasp, at surface of obj
         positive_grasps_translation = positive_grasps_tf[:, :3, 3] #(num_of_positive_grasp, 3)
@@ -501,6 +515,26 @@ class DataGenerator(tf.keras.utils.Sequence):
                 #All points near a grasp translation pts gets appr_vec same as k-vector of corresponding grasp
                 gt_approach[point_idx, :] = appr_vec
         
+        if __name__ == "__main__":
+            scene = trimesh.Scene()
+            pc_trimesh = trimesh.PointCloud(selected_point_cloud)
+            scene.add_geometry(pc_trimesh)
+            # for grasp in positive_grasps_tf:
+            #     cyl = trimesh.creation.cylinder(0.001, 0.01, 3)
+            #     cyl.apply_translation([0, 0, 0.005])
+            #     cyl.apply_transform(grasp)
+            #     scene.add_geometry(cyl)
+            for score, approach, point in zip(gt_score, gt_approach, selected_point_cloud):
+                if score >= 0:
+                    rot_trans = geometry.align_vectors([0, 0, 1], approach)
+                    cyl = creation.cylinder(0.001, 0.01, 3)
+                    cyl.apply_translation([0, 0, 0.005])
+                    cyl.apply_transform(rot_trans)
+                    cyl.apply_translation(point)
+                    cyl.visual.face_colors = [int(255*score), 0, 255 - int(255*score), 255]
+                    scene.add_geometry(cyl)
+            scene.show()
+
         pc_tensor = tf.convert_to_tensor(selected_point_cloud, dtype=tf.float32)
         gt_scores_tensor = tf.convert_to_tensor(gt_score, dtype=tf.int32)
         gt_approach_tensor = tf.convert_to_tensor(gt_approach, dtype=tf.float32)
@@ -576,3 +610,10 @@ class DataGenerator(tf.keras.utils.Sequence):
 
     def shuffle(self):
         self.scene_order = np.random.shuffle(self.scene_order)
+
+if __name__ == "__main__" :
+    data_gen = DataGenerator(data_dir=input("hdf5scene folder dir : "),
+                             hyperparameters={"THRESHOLD" : 0.05,
+                                              "SEARCH_RADIUS" : 0.003,
+                                              "RAW_NUM_POINTS" : 20000})
+    data_gen[int(input("Scene # : "))]
