@@ -535,6 +535,18 @@ class DataGenerator(tf.keras.utils.Sequence):
                     scene.add_geometry(cyl)
             scene.show()
 
+        selected_point_cloud = np.expand_dims(selected_point_cloud, axis=0)
+        gt_score = np.expand_dims(gt_score, axis=0)
+        gt_approach = np.expand_dims(gt_approach, axis=0)
+
+        #gt_score의 한 행에 1이 하나도 없는 상황이 나오면 학습시 NaN이 나와 방해하므로, 행마다 1의 갯수를 조사해서 없으면 그 행의 0인 값 중 하나를 1로 바꾼다
+        for i in range(len(gt_score)):
+            mask1 = np.where(gt_score[i] == 1)
+            if len(mask1[0]) == 0:
+                mask0 = np.where(gt_score[i] == 0)
+                print(mask0[0])
+                gt_score[i][mask0[0][0]] = 1.
+
         pc_tensor = tf.convert_to_tensor(selected_point_cloud, dtype=tf.float32)
         gt_scores_tensor = tf.convert_to_tensor(gt_score, dtype=tf.int32)
         gt_approach_tensor = tf.convert_to_tensor(gt_approach, dtype=tf.float32)
