@@ -474,10 +474,10 @@ class DataGenerator(tf.keras.utils.Sequence):
         positive_grasps_tf = grasps_tf_camera_frame[positive_grasps_idx_mask, :, :] #(num_of_positive_grasp, 4, 4)
         
         #vec [D, H, L] : translation of grasp, center of grasp, at surface of obj
-        positive_grasps_translation = np.squeeze(positive_grasps_tf[:, :3, 3], axis=-1) #(num_of_positive_grasp, 3)
+        positive_grasps_translation = positive_grasps_tf[:, :3, 3] #(num_of_positive_grasp, 3)
         
         #vec [C, G, K] : k-vector, approach vector, almost normal outward vector of obj surface
-        positive_grasps_approach_vector = np.squeeze(positive_grasps_tf[:, :3, 2], axis=-1) #(num_of_positive_grasp, 3)
+        positive_grasps_approach_vector = positive_grasps_tf[:, :3, 2] #(num_of_positive_grasp, 3)
 
         #initialize all value to -1
         gt_score = np.full([selected_point_cloud.shape[0]], -1, dtype=np.int32) #(raw_num_points)
