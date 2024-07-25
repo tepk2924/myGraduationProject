@@ -76,7 +76,7 @@ if __name__ == '__main__':
     ##############
     # build model
     inputs, outputs = arch.build_suction_pointnet_graph(hyperparameters)
-    model = arch.SuctionGraspNet(inputs, outputs)
+    model:tf.keras.models.Model = arch.SuctionGraspNet(inputs, outputs)
 
     # compile model
     lr_scheduler = tf.keras.optimizers.schedules.InverseTimeDecay(
@@ -86,21 +86,21 @@ if __name__ == '__main__':
     model.compile(optimizer=tf.keras.optimizers.Adam(
         learning_rate=lr_scheduler))
 
-    if OPTION == "l":
-        # load weights
-        weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
-        weight_filelist.sort()
-        epoch_list = [int(os.path.basename(weight_file).split('-')[0]) for weight_file in weight_filelist]
-        epoch_list = np.array(epoch_list)
-        if init_epoch == -1:
-            weight_file = weight_filelist[-1]
-            init_epoch = epoch_list[-1]
-        else:
-            idx = np.where(epoch_list == init_epoch)[0][0]
-            weight_file = weight_filelist[idx]
-            init_epoch = epoch_list[idx]
-        model.load_weights(weight_file)
-        print("Loaded weights from {}".format(weight_file))
+    # if OPTION == "l":
+    #     # load weights
+    #     weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
+    #     weight_filelist.sort()
+    #     epoch_list = [int(os.path.basename(weight_file).split('-')[0]) for weight_file in weight_filelist]
+    #     epoch_list = np.array(epoch_list)
+    #     if init_epoch == -1:
+    #         weight_file = weight_filelist[-1]
+    #         init_epoch = epoch_list[-1]
+    #     else:
+    #         idx = np.where(epoch_list == init_epoch)[0][0]
+    #         weight_file = weight_filelist[idx]
+    #         init_epoch = epoch_list[idx]
+    #     model.load_weights(weight_file)
+    #     print("Loaded weights from {}".format(weight_file))
 
     ####################
     # Prepare Training #
