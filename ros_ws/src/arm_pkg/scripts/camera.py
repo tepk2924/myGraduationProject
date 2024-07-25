@@ -1,4 +1,7 @@
 #!/usr/bin/env python
+import os
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from arm_pkg.srv import main_camera, main_cameraResponse
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
@@ -10,7 +13,7 @@ import pyzed.sl as sl
 zed = sl.Camera()
 # Create a InitParameters object and set configuration parameters
 init_params = sl.InitParameters()
-init_params.depth_mode = sl.DEPTH_MODE.QUALITY  # Use QUALITY depth mode
+init_params.depth_mode = sl.DEPTH_MODE.NEURAL  # Use QUALITY depth mode
 init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
 
 # Open the camera

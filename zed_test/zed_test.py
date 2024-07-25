@@ -28,6 +28,7 @@ zed.grab(runtime_params)
 zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
 zed.retrieve_measure(depth, sl.MEASURE.DEPTH)
 zed.retrieve_measure(pc, sl.MEASURE.XYZRGBA)
+
 rgb_left_np = rgb_left.get_data()[:, :, :3]
 rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
 depth_np = depth.get_data()

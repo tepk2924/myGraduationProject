@@ -57,6 +57,7 @@ def zed_camera():
 
             # depth_np = depth.get_data()
             rgb_left_np = rgb_left.get_data()[:, :, :3]
+            rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
             depth_np:np.ndarray = depth.get_data()
             depth_msg = Float32MultiArray()
             depth_msg.data = depth_np.reshape((-1)).tolist()

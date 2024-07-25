@@ -18,7 +18,7 @@ opencv-python==4.5.4.58
 pyrender==0.1.45
 pyglet==1.5.0
 blenderproc==2.7.0
-ZED_SDK == 4.1.2 @https://www.stereolabs.com/developers/release#82af3640d775 #(Works for CUDA 11.2) for Ubuntu20 (static version: y, AI Module: n, Install Samples: n, Install Python API: y)
+ZED_SDK == 4.1.2 @https://www.stereolabs.com/developers/release#82af3640d775 #(Works for CUDA 11.2) for Ubuntu20 (static version: y, AI Module: y(Do not optimize at installing session. Let it be optimized only the first time the program is run), Install Samples: y, Install Python API: y)
 pyzed == 4.1
 #At this point, numpy should be 1.24.4 and tensorflow 2.5.0 uses numpy < 1.20 (name deprecation)
 # To solve the name deprecation problem, every script using tensorflow should contain the following code between "import tensorflow as tf" and "import numpy as np"

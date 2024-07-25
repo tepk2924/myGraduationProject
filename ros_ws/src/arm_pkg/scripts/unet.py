@@ -21,7 +21,7 @@ from scipy import signal
 from arm_pkg.srv import main_unet, main_unetResponse
 
 bridge = CvBridge()
-model_name = rospy.get_param("model_name")
+model_name = rospy.get_param("unet_model_name")
 target_epoch = rospy.get_param("target_epoch")
 image_height = rospy.get_param("image_height")
 image_width = rospy.get_param("image_width")
