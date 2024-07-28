@@ -5,7 +5,7 @@ import os
 
 target_folder = os.path.dirname(__file__)
 
-OPTION = 2
+OPTION = 1
 if OPTION == 0:
     depth:np.ndarray = np.load(os.path.join(target_folder, "depth_binary.npy"))
     SIZE = 200
@@ -25,6 +25,7 @@ if OPTION == 0:
     plt.show()
 elif OPTION == 1:
     depth:np.ndarray = np.load(os.path.join(target_folder, "depth_binary.npy"))
+    depth = np.nan_to_num(depth)
     x = np.array(list(range(depth.shape[1])))
     y = np.array(list(range(depth.shape[0])))
     x, y = np.meshgrid(x, y)

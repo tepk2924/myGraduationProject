@@ -9,6 +9,7 @@ def plot_grasp(scene: trimesh.Scene,
     cyl = creation.cylinder(0.001, 0.01, 3)
     cyl.apply_translation([0, 0, 0.005])
     cyl.apply_transform(grasp_tf)
+    cyl.visual.face_colors = [255, 255, 255, 255]
     scene.add_geometry(cyl)
 
 if __name__ == "__main__":

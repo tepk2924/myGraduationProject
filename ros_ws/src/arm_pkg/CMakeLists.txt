@@ -11,6 +11,7 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   rospy
   std_msgs
+  sensor_msgs
   message_generation
 )
 
@@ -57,9 +58,9 @@ find_package(catkin REQUIRED COMPONENTS
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
-  main_camera.srv
-  main_unet.srv
-  robot_main.srv
+  MainCamera.srv
+  MainUnet.srv
+  RobotMain.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -70,10 +71,11 @@ add_service_files(
 # )
 
 ## Generate added messages and services with any dependencies listed here
-# generate_messages(
-#   DEPENDENCIES
-#   std_msgs
-# )
+generate_messages(
+  DEPENDENCIES
+  std_msgs
+  sensor_msgs
+)
 
 ################################################
 ## Declare ROS dynamic reconfigure parameters ##
@@ -107,7 +109,7 @@ add_service_files(
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES arm_pkg
-  CATKIN_DEPENDS roscpp rospy std_msgs message_runtime
+  CATKIN_DEPENDS roscpp rospy std_msgs sensor_msgs message_runtime
 #  DEPENDS system_lib
 )
 
@@ -165,6 +167,7 @@ catkin_install_python(PROGRAMS
    scripts/camera.py
    scripts/main.py
    scripts/unet.py
+   scripts/robot.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

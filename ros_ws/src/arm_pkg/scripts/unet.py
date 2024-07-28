@@ -18,7 +18,7 @@ from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge, CvBridgeError
 from scipy import signal
-from arm_pkg.srv import main_unet, main_unetResponse
+from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
 
 bridge = CvBridge()
 model_name = rospy.get_param("unet_model_name")
@@ -47,7 +47,7 @@ else:
     target_epoch = epoch_list[idx]
 model.load_weights(weight_file)
 
-def callback(req):
+def callback(req:MainUnetRequest):
     cv_image:np.ndarray = bridge.imgmsg_to_cv2(req.img, "rgb8")
     laplacian = np.array([[1, 4, 1],
                             [4,-20, 4],
@@ -57,7 +57,8 @@ def callback(req):
                 signal.convolve2d(cv_image[:, :, 1], laplacian, mode="same", boundary="symm")**2 + 
                 signal.convolve2d(cv_image[:, :, 2], laplacian, mode="same", boundary="symm")**2)
     RGBDE_normalized[:, :, 4] = (kernaled - np.mean(kernaled))/np.std(kernaled)
-    depth_np = np.array(req.depth, dtype=float).reshape((image_height, image_width))
+    depth_np = np.array(req.depth.data, dtype=float).reshape((image_height, image_width))
+    depth_np = np.nan_to_num(depth_np)
     RGBDE_normalized[:, :, 3] = (depth_np - np.mean(depth_np))/np.std(depth_np)
     logit = model(tf.expand_dims(tf.convert_to_tensor(RGBDE_normalized, dtype=tf.float32), axis=0), training=False)
     pred_segmap_prob = tf.nn.softmax(logit)
@@ -70,8 +71,8 @@ def callback(req):
 
     pred_segmap_RGB = convert_RGB[pred_segmap]
     segmap_msg = bridge.cv2_to_imgmsg(pred_segmap_RGB, "rgb8")
-    return main_unetResponse(segmap_msg)
+    return MainUnetResponse(segmap_msg)
 
 rospy.init_node("unet")
-service = rospy.Service("/main_unet", main_unet, callback)
+service = rospy.Service("main_unet", MainUnet, callback)
 rospy.spin()

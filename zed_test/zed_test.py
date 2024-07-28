@@ -8,7 +8,7 @@ target_folder = os.path.dirname(__file__)
 zed = sl.Camera()
 
 init_params = sl.InitParameters()
-init_params.depth_mode = sl.DEPTH_MODE.QUALITY
+init_params.depth_mode = sl.DEPTH_MODE.NEURAL
 init_params.coordinate_units = sl.UNIT.METER
 
 runtime_params = sl.RuntimeParameters()

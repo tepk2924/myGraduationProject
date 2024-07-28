@@ -2,7 +2,7 @@
 import os
 import sys
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from arm_pkg.srv import main_camera, main_cameraResponse
+from arm_pkg.srv import MainCamera, MainCameraResponse
 from sensor_msgs.msg import Image
 from std_msgs.msg import Float32MultiArray
 from cv_bridge import CvBridge, CvBridgeError
@@ -39,14 +39,13 @@ def callback(req):
         zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
         zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
         rgb_left_np = rgb_left.get_data()[:, :, :3]
+        rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
         depth_np:np.ndarray = depth.get_data()
         depth_msg = Float32MultiArray()
         depth_msg.data = depth_np.reshape((-1)).tolist()
         image_msg: Image = bridge.cv2_to_imgmsg(rgb_left_np, "rgb8")
-        depth_msg: Float32MultiArray = Float32MultiArray()
-        depth_msg.data = depth_np.reshape((-1)).tolist()
-    return main_cameraResponse(image_msg, depth_msg)
+    return MainCameraResponse(image_msg, depth_msg)
 
 rospy.init_node("main")
-service = rospy.Service("/main_camera", main_camera, callback)
+service = rospy.Service("main_camera", MainCamera, callback)
 rospy.spin()
