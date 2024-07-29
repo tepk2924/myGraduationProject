@@ -1,0 +1,5 @@
+std_msgs/Float32MultiArray pointcloud
+---
+std_msgs/Float32MultiArray pointcloudresult
+std_msgs/Float32MultiArray scores
+std_msgs/Float32MultiArray approaches

@@ -60,6 +60,7 @@ add_service_files(
   FILES
   MainCamera.srv
   MainUnet.srv
+  MainSgnet.srv
   RobotMain.srv
 )
 
@@ -167,6 +168,7 @@ catkin_install_python(PROGRAMS
    scripts/camera.py
    scripts/main.py
    scripts/unet.py
+   scripts/sgnet.py
    scripts/robot.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )

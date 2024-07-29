@@ -22,7 +22,7 @@ from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
 
 bridge = CvBridge()
 model_name = rospy.get_param("unet_model_name")
-target_epoch = rospy.get_param("target_epoch")
+target_epoch = rospy.get_param("unet_target_epoch")
 image_height = rospy.get_param("image_height")
 image_width = rospy.get_param("image_width")
 RGBDE_normalized = np.ndarray((image_height, image_width, 5), dtype=float)
