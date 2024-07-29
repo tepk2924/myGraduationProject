@@ -42,7 +42,7 @@ else:
 model.load_weights(weight_file)
 
 def callback(req:MainSgnetRequest):
-    point_cloud_np = req.pointcloud.data.reshape((-1, 3))
+    point_cloud_np = np.array(req.pointcloud.data).reshape((-1, 3))
     selected_point_idxs = np.random.choice(range(point_cloud_np.shape[0]),
                                            hyperparameters["RAW_NUM_POINTS"],
                                            False)

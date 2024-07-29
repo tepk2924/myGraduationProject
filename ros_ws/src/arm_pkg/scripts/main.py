@@ -34,7 +34,13 @@ def callback(req):
     resp3:MainSgnetResponse = service_req_sgnet(pc)
     pc_result_np = np.array(resp3.pointcloudresult.data).reshape((-1, 3))
     scores_np = np.array(resp3.scores.data).reshape((-1))
-    approaches_np = np.array(resp3.scores.data).reshape((-1))
+    approaches_np = np.array(resp3.scores.data).reshape((-1, 3))
+
+    THRESHOLD = np.quantile(scores_np, 0.9)
+    selected_idx = np.where(scores_np >= THRESHOLD)[0]
+    pc_selected = pc_result_np[selected_idx]
+    scores_selected = scores_np[selected_idx]
+    approaches_selected = approaches_np[selected_idx]
 
     return RobotMainResponse()
 
