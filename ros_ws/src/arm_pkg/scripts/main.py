@@ -59,6 +59,14 @@ def callback(req):
     print(f"{scores_selected = }")
     print(f"{approaches_selected = }")
 
+    # for point in pc_selected:
+    #     print(np.where(np.all(pc_np == point, axis=1))[0])
+
+    pc_np = np.nan_to_num(pc_np)
+    scene = trimesh.Scene()
+    scene.add_geometry(trimesh.PointCloud(pc_np, np.pad(segmap_np.reshape(-1, 3), ((0, 0), (0, 1)), mode='constant', constant_values=255)))
+    scene.show()
+
     return RobotMainResponse()
 
 rospy.init_node("main")
