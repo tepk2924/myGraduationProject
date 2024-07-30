@@ -1,7 +1,7 @@
 #/bin/bash
 
-TF_CFLAGS=$(python3 -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
-TF_LFLAGS=$(python3 -c 'import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
+TF_CFLAGS=$(python3 -c 'import numpy as np; np.bool = np.bool_; np.int = np.int_; np.float = np.float_; np.complex = np.complex_; np.object = np.object_; np.typeDict = np.sctypeDict; import tensorflow as tf; print(" ".join(tf.sysconfig.get_compile_flags()))')
+TF_LFLAGS=$(python3 -c 'import numpy as np; np.bool = np.bool_; np.int = np.int_; np.float = np.float_; np.complex = np.complex_; np.object = np.object_; np.typeDict = np.sctypeDict; import tensorflow as tf; print(" ".join(tf.sysconfig.get_link_flags()))')
 CUDA_ROOT=/usr/local/cuda-11.2
 NVCC_ROOT=/usr/local/cuda-11.2/bin/nvcc
 

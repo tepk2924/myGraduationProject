@@ -1,3 +1,4 @@
 1. 여기 compile_ops.sh 파일에 "python" 글귀를 "python3" 글귀로 변경해야만 했음.
 2. nvcc가 위치한 경로도 무조건 cuda의 디렉토리에 아래에 있는 것이 아니라 이에 따라 수정해야만 했음.
 따라서, 다른 컴퓨터에서 이를 실행하려면 각 컴퓨터에 맞춰 경로를 수정한 다음, chmod u+x로 권한을 주고 실행해서 컴파일 해야 함.
+3. Since tensorflow version and the numpy version currently used is not matched (name deprication problem) I had to insert "import numpy as np; np.bool = np.bool_; np.int = np.int_; np.float = np.float_; np.complex = np.complex_; np.object = np.object_; np.typeDict = np.sctypeDict; " into the .sh file.

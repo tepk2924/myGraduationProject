@@ -5,7 +5,7 @@ import os
 
 target_folder = os.path.dirname(__file__)
 
-OPTION = 1
+OPTION = 2
 if OPTION == 0:
     depth:np.ndarray = np.load(os.path.join(target_folder, "depth_binary.npy"))
     SIZE = 200

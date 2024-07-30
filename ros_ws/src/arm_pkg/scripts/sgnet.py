@@ -12,13 +12,14 @@ import tensorflow as tf
 import importlib
 import sys
 import os
+sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import yaml
 import glob
 from std_msgs.msg import Float32MultiArray
 from scipy import signal
 from arm_pkg.srv import MainSgnet, MainSgnetResponse, MainSgnetRequest
 
-model_name = rospy.get_param("unet_model_name")
+model_name = rospy.get_param("sgnet_model_name")
 target_epoch = rospy.get_param("sgnet_target_epoch")
 project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 sys.path.append(project_dir)
@@ -26,7 +27,7 @@ arch = importlib.import_module(f"sgnet_checkpoints.{model_name}.sgnet_architectu
 saved_model_dir = os.path.join(os.path.join(project_dir, "sgnet_checkpoints"), model_name)
 with open(os.path.join(saved_model_dir, "hyperparameters.yml"), 'r') as f:
     hyperparameters = yaml.safe_load(f)
-inputs, outputs = arch.build_unet_graph(hyperparameters)
+inputs, outputs = arch.build_suction_pointnet_graph(hyperparameters)
 model = arch.SuctionGraspNet(inputs, outputs)
 weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
 weight_filelist.sort()
@@ -43,6 +44,8 @@ model.load_weights(weight_file)
 
 def callback(req:MainSgnetRequest):
     point_cloud_np = np.array(req.pointcloud.data).reshape((-1, 3))
+    nan_mask = np.where(np.any(np.isnan(point_cloud_np), axis=-1) == False)[0]
+    point_cloud_np = point_cloud_np[nan_mask]
     selected_point_idxs = np.random.choice(range(point_cloud_np.shape[0]),
                                            hyperparameters["RAW_NUM_POINTS"],
                                            False)
@@ -69,6 +72,6 @@ def callback(req:MainSgnetRequest):
 
     return MainSgnetResponse(pc_msg, score_msg, approach_msg)
 
-rospy.init_node("unet")
-service = rospy.Service("main_unet", MainSgnet, callback)
+rospy.init_node("sgnet")
+service = rospy.Service("main_sgnet", MainSgnet, callback)
 rospy.spin()

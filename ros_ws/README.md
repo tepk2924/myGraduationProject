@@ -5,3 +5,5 @@ venv를 실행할 때의 파이썬 가상환경 경로는 import sys; print(sys.
 현재 이것을 작성하고 있는 로컬 컴퓨터 기준으로는 /home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python가 출력되므로, 맨 처음 catkin_make의 명령어는 다음과 같음: 
 
 "catkin_make -DPYTHON_EXECUTABLE=/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python"
+
+"catkin_make -DCATKIN_WHITELIST_PACKAGES="irb120_description;irb120_moveit_config;arm_pkg" -DPYTHON_EXECUTABLE=/home/riseabb/johan_ws/myGraduationProject/venv/bin/python3"

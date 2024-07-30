@@ -44,7 +44,8 @@ def callback(req):
         depth_msg = Float32MultiArray()
         depth_msg.data = depth_np.reshape((-1)).tolist()
         image_msg: Image = bridge.cv2_to_imgmsg(rgb_left_np, "rgb8")
-        pc_np:np.ndarray = point_cloud.get_data()
+        pc_np:np.ndarray = point_cloud.get_data()[:, :, :3]
+        print(pc_np)
         pc_msg = Float32MultiArray()
         pc_msg.data = pc_np.reshape((-1)).tolist()
     return MainCameraResponse(image_msg, depth_msg, pc_msg)

@@ -19,7 +19,9 @@ import h5py
 if __name__ == '__main__':
     # solve tensorflow memory issue
     physical_devices = tf.config.list_physical_devices('GPU')
-    tf.config.experimental.set_memory_growth(physical_devices[0], True) # allow memory growth
+
+    for device in physical_devices:
+        tf.config.experimental.set_memory_growth(device, True) # allow memory growth
 
     saved_model_dir = input("Directory of the folder containing saved model (must be in the folder 'unet_checkpoints'): ")
     saved_model_name = os.path.basename(saved_model_dir)
