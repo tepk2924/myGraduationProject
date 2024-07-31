@@ -38,6 +38,7 @@ elif OPTION == 1:
     plt.show()
 else:
     import trimesh
+    from trimesh import creation
     scene = trimesh.Scene()
     pc:np.ndarray = np.load(os.path.join(target_folder, "point_cloud.npy"))[:, :, :3]
     pc = pc.reshape((-1, 3))
@@ -46,5 +47,7 @@ else:
     rgb = rgb.reshape((-1, 3))
     pc_trimesh = trimesh.PointCloud(pc[nan_mask], np.concatenate((rgb[nan_mask], np.full((nan_mask[0].shape[0], 1), 255)), axis=-1))
     scene.add_geometry(pc_trimesh)
-
-    scene.show()
+    scene.add_geometry(creation.axis(origin_size=0.01,
+                                     axis_radius=0.005))
+    
+    scene.show(line_settings={'point_size':0.05})

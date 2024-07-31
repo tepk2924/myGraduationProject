@@ -1,6 +1,8 @@
 #!/usr/bin/env python
 import os
 import sys
+
+import trimesh.geometry
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 from arm_pkg.srv import RobotMain, RobotMainResponse
 from arm_pkg.srv import MainCamera, MainCameraRequest, MainCameraResponse
@@ -12,6 +14,7 @@ from cv_bridge import CvBridge, CvBridgeError
 from PIL import Image as pilimage
 import numpy as np
 import trimesh
+from trimesh import creation
 import rospy
 
 pub = rospy.Publisher('chatter', Image, queue_size=2)
@@ -51,22 +54,51 @@ def callback(req):
 
     THRESHOLD = np.quantile(scores_np, 0.5)
     selected_idx = np.where(scores_np >= THRESHOLD)[0]
-    pc_selected = pc_result_np[selected_idx]
-    scores_selected = scores_np[selected_idx]
-    approaches_selected = approaches_np[selected_idx]
+    pc_thresholded = pc_result_np[selected_idx]
+    scores_thresholded = scores_np[selected_idx]
+    approaches_thresholded = approaches_np[selected_idx]
 
-    print(f"{pc_selected = }")
-    print(f"{scores_selected = }")
-    print(f"{approaches_selected = }")
+    print(f"{pc_thresholded = }")
+    print(f"{scores_thresholded = }")
+    print(f"{approaches_thresholded = }")
 
-    # for point in pc_selected:
-    #     print(np.where(np.all(pc_np == point, axis=1))[0])
+    segmap_np = segmap_np.reshape((-1, 3))
 
-    pc_np = np.nan_to_num(pc_np)
-    scene = trimesh.Scene()
-    scene.add_geometry(trimesh.PointCloud(pc_np, np.pad(segmap_np.reshape(-1, 3), ((0, 0), (0, 1)), mode='constant', constant_values=255)))
-    scene.show()
+    # pc_np = np.nan_to_num(pc_np)
+    # scene = trimesh.Scene()
+    # scene.add_geometry(trimesh.PointCloud(pc_np, np.pad(segmap_np, ((0, 0), (0, 1)), mode='constant', constant_values=255)))
+    # scene.show()
 
+    pc_filtered = np.zeros((0, 3), dtype=np.float32)
+    scores_filtered = np.zeros((0), dtype=np.float32)
+    approaches_filtered = np.zeros((0, 3), dtype=np.float32)
+
+    for point, score, approach in zip(pc_thresholded, scores_thresholded, approaches_thresholded):
+        idx = np.where(np.all(pc_np == point, axis=1))[0][0]
+        if segmap_np[idx, 2] == 255:
+            pc_filtered = np.vstack((pc_filtered, point))
+            scores_filtered = np.hstack((scores_filtered, score))
+            approaches_filtered = np.vstack((approaches_filtered, approach))
+    
+    print(f"{pc_filtered = }")
+    print(f"{scores_filtered = }")
+    print(f"{approaches_filtered = }")
+
+    # pc_np = np.nan_to_num(pc_np)
+    # scene = trimesh.Scene()
+    # scene.add_geometry(trimesh.PointCloud(pc_np, np.pad(img_np.reshape((-1, 3)), ((0, 0), (0, 1)), mode='constant', constant_values=255)))
+    # for point, approach in zip(pc_filtered, approaches_filtered):
+    #     rot_trans = trimesh.geometry.align_vectors([0, 0, 1], approach)
+    #     cyl = creation.cylinder(0.001, 0.05, 3)
+    #     cyl.apply_translation([0, 0, 0.025])
+    #     cyl.apply_transform(rot_trans)
+    #     cyl.apply_translation(point)
+    #     scene.add_geometry(cyl)
+    #     scene.add_geometry(creation.axis())
+    # scene.show()
+
+    
+    
     return RobotMainResponse()
 
 rospy.init_node("main")

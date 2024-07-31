@@ -33,6 +33,8 @@ rgb_left_np = rgb_left.get_data()[:, :, :3]
 rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
 depth_np = depth.get_data()
 point_cloud_np = pc.get_data()
+point_cloud_np[:, :, [1, 2]] *= -1
+print(point_cloud_np.shape)
 
 Image.fromarray(rgb_left_np, "RGB").save(os.path.join(target_folder, "Image.png"))
 with open(os.path.join(target_folder, "depth_binary.npy"), "wb") as f:
