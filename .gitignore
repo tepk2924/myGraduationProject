@@ -33,6 +33,7 @@ ros_ws/src/zed-ros-wrapper
 ros_ws/build
 ros_ws/devel
 ros_ws/src/drivers
+ros_ws/src/arm_pkg/scripts/*.png
 .vscode
 sgnet_checkpoints/*
 IPA-3D1K

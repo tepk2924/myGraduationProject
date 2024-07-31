@@ -95,9 +95,7 @@ def callback(req):
     #     cyl.apply_translation(point)
     #     scene.add_geometry(cyl)
     #     scene.add_geometry(creation.axis())
-    # scene.show()
-
-    
+    # scene.show()    
     
     return RobotMainResponse()
 
