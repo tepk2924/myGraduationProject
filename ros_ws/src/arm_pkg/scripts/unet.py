@@ -16,7 +16,7 @@ sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import yaml
 import glob
 from sensor_msgs.msg import Image
-from std_msgs.msg import Float32MultiArray
+from std_msgs.msg import Float32MultiArray, Int16MultiArray
 from cv_bridge import CvBridge, CvBridgeError
 from scipy import signal
 from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
@@ -64,14 +64,19 @@ def callback(req:MainUnetRequest):
     logit = model(tf.expand_dims(tf.convert_to_tensor(RGBDE_normalized, dtype=tf.float32), axis=0), training=False)
     pred_segmap_prob = tf.nn.softmax(logit)
     pred = tf.argmax(pred_segmap_prob, axis=-1)
-    pred_segmap=tf.squeeze(pred, axis=0).numpy()
+    pred_segmap:np.ndarray = tf.squeeze(pred, axis=0).numpy()
 
-    convert_RGB = np.array([[255, 0, 0],
-                            [0, 255, 0],
-                            [0, 0, 255]], dtype=np.uint8)
+    print(f"{pred_segmap = }")
 
-    pred_segmap_RGB = convert_RGB[pred_segmap]
-    segmap_msg = bridge.cv2_to_imgmsg(pred_segmap_RGB, "rgb8")
+    segmap_msg = Int16MultiArray()
+    segmap_msg.data = pred_segmap.reshape((-1)).tolist()
+
+    # convert_RGB = np.array([[255, 0, 0],
+    #                         [0, 255, 0],
+    #                         [0, 0, 255]], dtype=np.uint8)
+
+    # pred_segmap_RGB = convert_RGB[pred_segmap]
+    # segmap_msg = bridge.cv2_to_imgmsg(pred_segmap_RGB, "rgb8")
     return MainUnetResponse(segmap_msg)
 
 rospy.init_node("unet")

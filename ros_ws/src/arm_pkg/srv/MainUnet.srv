@@ -1,4 +1,4 @@
 sensor_msgs/Image img
 std_msgs/Float32MultiArray depth
 ---
-sensor_msgs/Image segmap
+std_msgs/Int16MultiArray segmap
