@@ -66,7 +66,7 @@ def callback(req:MainUnetRequest):
     pred = tf.argmax(pred_segmap_prob, axis=-1)
     pred_segmap:np.ndarray = tf.squeeze(pred, axis=0).numpy()
 
-    print(f"{pred_segmap = }")
+    # print(f"{pred_segmap = }")
 
     segmap_msg = Int16MultiArray()
     segmap_msg.data = pred_segmap.reshape((-1)).tolist()
