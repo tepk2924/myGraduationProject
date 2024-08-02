@@ -39,6 +39,7 @@ def callback(req):
         zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
         zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
         rgb_left_np = rgb_left.get_data()[:, :, :3]
+        print(f"{rgb_left_np.shape = }")
         rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
         depth_np:np.ndarray = depth.get_data()
         depth_msg = Float32MultiArray()

@@ -39,7 +39,7 @@ def callback(req):
                                  [0, 0, 255]], dtype=np.uint8)[segmap_np.reshape((720, 1280))], "RGB").save(os.path.join(os.path.dirname(__file__), "Segmap.png"))
     service_req_sgnet = rospy.ServiceProxy("main_sgnet", MainSgnet)
     resp3:MainSgnetResponse = service_req_sgnet(pc)
-    print(f"{resp3 = }")
+    # print(f"{resp3 = }")
     pc_result_np = np.array(resp3.pointcloudresult.data).reshape((-1, 3))
     scores_np = np.array(resp3.scores.data).reshape((-1))
     approaches_np = np.array(resp3.approaches.data).reshape((-1, 3))
@@ -80,9 +80,9 @@ def callback(req):
             scores_filtered = np.hstack((scores_filtered, score))
             approaches_filtered = np.vstack((approaches_filtered, approach))
     
-    print(f"{pc_filtered = }")
-    print(f"{scores_filtered = }")
-    print(f"{approaches_filtered = }")
+    # print(f"{pc_filtered = }")
+    # print(f"{scores_filtered = }")
+    # print(f"{approaches_filtered = }")
 
     pc_filtered_msg = Float32MultiArray()
     scores_filtered_msg = Float32MultiArray()
@@ -103,7 +103,7 @@ def callback(req):
         cyl.apply_translation(point)
         scene.add_geometry(cyl)
         scene.add_geometry(creation.axis())
-    scene.show()    
+    scene.show(line_settings={'point_size':0.05})    
     
     return RobotMainResponse(pc_filtered_msg,
                              scores_filtered_msg,
