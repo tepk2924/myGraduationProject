@@ -56,7 +56,8 @@ def callback(req:MainSgnetRequest):
     output_pc: tf.Tensor
     score_output: tf.Tensor
     approach_output: tf.Tensor
-    output_pc, score_output, approach_output = model(pc_tensor, training=False)
+    with tf.device('/device:GPU:1'):
+        output_pc, score_output, approach_output = model(pc_tensor, training=False)
 
     pc_np:np.ndarray = output_pc[0].numpy()
     score_np:np.ndarray = score_output[0].numpy()
