@@ -44,3 +44,4 @@ blenderproc_test
 zed_test/*.npy
 zed_test/*.png
 hdf5scenes_generated
+*.whl
