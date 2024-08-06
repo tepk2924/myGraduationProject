@@ -38,7 +38,7 @@ ros_ws/src/arm_pkg/scripts/*.png
 sgnet_checkpoints/*
 IPA-3D1K
 pklscenes_generated
-DataSet
+DataSet*
 DataSet.tar.gz
 blenderproc_test
 zed_test/*.npy
