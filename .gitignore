@@ -25,7 +25,7 @@ objscenes_generated/
 STEP3_hdf5scene_generated
 texture_dataset
 texture_dataset/
-test.py
+test*.py
 unet_checkpoints/*
 simple_objects
 simple_objects/

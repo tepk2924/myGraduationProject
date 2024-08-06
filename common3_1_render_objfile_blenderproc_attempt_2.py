@@ -1,5 +1,5 @@
 import blenderproc as bproc
-from blenderproc.python.types import MeshObjectUtility
+from blenderproc.python.types import MeshObjectUtility, MaterialUtility
 from typing import List
 import argparse
 import bpy
@@ -35,6 +35,10 @@ obj_poses = np.concatenate((obj_poses, np.array([[[1, 0, 0, 0],
                                                   [0, 1, 0, 0],
                                                   [0, 0, 1, 0],
                                                   [0, 0, 0, 1]]])), axis=0)
+obj_poses = np.concatenate((obj_poses, np.array([[[1, 0, 0, 0],
+                                                  [0, 1, 0, 0],
+                                                  [0, 0, 1, 0],
+                                                  [0, 0, 0, 1]]])), axis=0)
 
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
@@ -42,15 +46,19 @@ objs: List[MeshObjectUtility.MeshObject] = []
 for obj_file_path in obj_file_list:
     objs += bproc.loader.load_obj(obj_file_path)
 
-objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "table.obj"))
-
-for obj in objs:
-    print(f"{obj.get_name() = }")
+objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "table_attempt_2.obj"))
+objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "floor_attempt_2.obj"))
 
 obj_tags = []
 for obj, pose in zip(objs, obj_poses):
     obj_name = obj.get_name()
-    if obj_name == "table":
+    print(f"{obj.get_name() = }")
+    obj.apply_T(np.array([[0, 1, 0, 0],
+                          [0, 0, 1, 0],
+                          [1, 0, 0, 0],
+                          [0, 0, 0, 1]]))
+    obj.apply_T(pose)
+    if obj_name in ["table", "floor"]:
         obj_tag = "background"
     else:
         obj_tag = random.choice(["invalid", "valid"])
@@ -68,16 +76,21 @@ for obj, pose in zip(objs, obj_poses):
         obj.set_material(0, mat)
     else: #valid
         obj.set_cp("category_id", 2)
-    obj.apply_T(np.array([[0, 1, 0, 0],
-                          [0, 0, 1, 0],
-                          [1, 0, 0, 0],
-                          [0, 0, 0, 1]]))
-    obj.apply_T(pose)
+        if np.random.uniform(0, 1) > 0.7:
+            mat:MaterialUtility.Material = obj.get_materials()[0]
+            mat.get_principled_shader_value("Base Color", np.random.uniform([0, 0, 0, 1],
+                                                                            [1, 1, 1, 1]))
+
+floor_fluc = 0.2*random.random() - 0.1
+objs[-1].apply_T(np.array([[1, 0, 0, 0],
+                           [0, 1, 0, 0],
+                           [0, 0, 1, floor_fluc],
+                           [0, 0, 0, 1]]))
 
 deg = math.pi/180
-lights = []
+lights:List[bproc.types.Light] = []
 
-#광원 배치 : 1개부터 5개까지 랜덤
+#Light Source: 1-5 light sources
 for _ in range(light_num := random.randint(1, 5)):
     theta = 2*math.pi*random.random()
     phi = 20*deg + (70*deg)*random.random()
@@ -105,23 +118,12 @@ elif CAMERA == "ZED":
 else:
     raise Exception("What is this Camera?")
 
-deg = math.pi/180
-theta = 2*math.pi*random.random()
-phi = 50*deg + (30*deg)*random.random()
-dist = 1.2 + 0.4*random.random()
+camera_loc = np.random.uniform([-0.5, -0.5, 1.0], [0.5, 0.5, 1.6])
+poi = np.random.uniform([-0.2, -0.2, 0.3], [0.2, 0.2, 0.3])
 
-camera_extrinsic = np.eye(4, dtype=float)
+camera_rot = bproc.camera.rotation_from_forward_vec(poi - camera_loc, inplane_rot=np.random.uniform(-np.pi, np.pi))
 
-x_ = np.array([-math.sin(theta), math.cos(theta), 0], dtype=float)
-z_ = np.array([math.cos(phi)*math.cos(theta), math.cos(phi)*math.sin(theta), math.sin(phi)], dtype=float)
-y_ = np.cross(z_, x_)
-
-camera_translation = np.array([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)], dtype=float).T
-
-camera_extrinsic[:3, 0] = x_.T
-camera_extrinsic[:3, 1] = y_.T
-camera_extrinsic[:3, 2] = z_.T
-camera_extrinsic[:3, 3] = camera_translation
+camera_extrinsic = bproc.math.build_transformation_mat(camera_loc, camera_rot)
 bproc.camera.add_camera_pose(camera_extrinsic)
 bvh_tree = bproc.object.create_bvh_tree_multi_objects(objs)
 
