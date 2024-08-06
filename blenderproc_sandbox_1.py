@@ -11,42 +11,34 @@ import pickle
 import sys
 sys.path.append(os.path.dirname(__file__))
 
-parser = argparse.ArgumentParser()
-parser.add_argument('--filepath', type=str)
-args = parser.parse_args()
-
-filepath = args.filepath
+filepath = "/home/tepk2924/tepk2924Works/myGraduationProject/DataSet/train/32770_Thingi10K/32770.obj"
 
 bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
 
 objs: List[MeshObjectUtility.MeshObject] = bproc.loader.load_obj(filepath)
 
-objs += bproc.loader.load_obj(filepath)
+objs += bproc.loader.load_obj("/home/tepk2924/tepk2924Works/myGraduationProject/surrounding_attempt_2.obj")
+
+mat = bproc.material.create_material_from_texture("/home/tepk2924/tepk2924Works/myGraduationProject/DataSet/texture_dataset/train/background/interlaced_0121.jpg", "surr")
+objs[1].add_material(mat)
 
 for obj in objs:
     print(obj.get_name())
-
-objs[1].apply_T(np.array([[1, 0, 0, -0.4],
-                          [0, 1, 0, 0.2],
+    obj.apply_T(np.array([[0, 1, 0, 0],
                           [0, 0, 1, 0],
+                          [1, 0, 0, 0],
                           [0, 0, 0, 1]]))
 
-objs[0].apply_T(np.array([[0.5, 0, 0, 0],
-                          [0, 1, 0, 0],
-                          [0, 0, 1, 0],
-                          [0, 0, 0, 1]]))
+# mat:List[MaterialUtility.Material] = objs[0].get_materials()
+# mat[0].set_principled_shader_value("Roughness", 0)
+# mat[0].set_principled_shader_value("Metallic", 0.5)
 
-mat:List[MaterialUtility.Material] = objs[0].get_materials()
-mat[0].set_principled_shader_value("Roughness", 1)
-mat[0].set_principled_shader_value("Metallic", 0)
-mat[0].set_principled_shader_value("Base Color", [1, 0, 0, 1])
+# lightobj = bproc.filter.by_attr(objs, "name", "37786.001")
+# print(lightobj)
 
-lightobj = bproc.filter.by_attr(objs, "name", "37786.001")
-print(lightobj)
-
-bproc.lighting.light_surface(lightobj,
-                             emission_strength=1000,
-                             emission_color=[1, 0, 0, 1])
+# bproc.lighting.light_surface(lightobj,
+#                              emission_strength=1000,
+#                              emission_color=[1, 0, 0, 1])
 
 deg = math.pi/180
 lights = []
@@ -58,7 +50,7 @@ for _ in range(1):
     lights.append(bproc.types.Light())
     lights[-1].set_type("POINT")
     lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), dist*math.sin(phi)])
-    lights[-1].set_energy(1000)
+    lights[-1].set_energy(250)
 
 CAMERA = "ZED"
 
@@ -96,8 +88,9 @@ else:
 # camera_extrinsic[:3, 2] = z_.T
 # camera_extrinsic[:3, 3] = camera_translation
 poi = np.array([0, 0, 0])
-camera_loc = np.random.uniform([-0.3, -0.3, 0.5], [0.3, 0.3, 1])
-inplane = np.random.uniform(-np.pi, np.pi)
+# camera_loc = np.random.uniform([-0.3, -0.3, 0.5], [0.3, 0.3, 1])
+camera_loc = np.array([0.1, 0.1, 0.2])
+inplane = np.random.uniform(0, 0)
 rot = bproc.camera.rotation_from_forward_vec(poi - camera_loc, inplane_rot=inplane)
 
 camera_extrinsic = bproc.math.build_transformation_mat(camera_loc, rot)

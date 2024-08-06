@@ -47,7 +47,7 @@ for obj_file_path in obj_file_list:
     objs += bproc.loader.load_obj(obj_file_path)
 
 objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "table_attempt_2.obj"))
-objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "floor_attempt_2.obj"))
+objs += bproc.loader.load_obj(os.path.join(os.path.dirname(__file__), "surrounding_attempt_2.obj"))
 
 obj_tags = []
 for obj, pose in zip(objs, obj_poses):
@@ -58,7 +58,7 @@ for obj, pose in zip(objs, obj_poses):
                           [1, 0, 0, 0],
                           [0, 0, 0, 1]]))
     obj.apply_T(pose)
-    if obj_name in ["table", "floor"]:
+    if obj_name in ["table", "surrounding"]:
         obj_tag = "background"
     else:
         obj_tag = random.choice(["invalid", "valid"])
@@ -94,7 +94,7 @@ lights:List[bproc.types.Light] = []
 for _ in range(light_num := random.randint(1, 5)):
     theta = 2*math.pi*random.random()
     phi = 20*deg + (70*deg)*random.random()
-    dist = 1.8 + 2.5*random.random()
+    dist = 1.8
     lights.append(bproc.types.Light())
     lights[-1].set_type("POINT")
     lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
