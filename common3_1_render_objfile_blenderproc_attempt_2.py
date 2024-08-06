@@ -78,7 +78,7 @@ for obj, pose in zip(objs, obj_poses):
         obj.set_cp("category_id", 2)
         if np.random.uniform(0, 1) > 0.7:
             mat:MaterialUtility.Material = obj.get_materials()[0]
-            mat.get_principled_shader_value("Base Color", np.random.uniform([0, 0, 0, 1],
+            mat.set_principled_shader_value("Base Color", np.random.uniform([0, 0, 0, 1],
                                                                             [1, 1, 1, 1]))
 
 floor_fluc = 0.2*random.random() - 0.1
