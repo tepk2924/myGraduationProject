@@ -118,7 +118,7 @@ elif CAMERA == "ZED":
 else:
     raise Exception("What is this Camera?")
 
-camera_loc = np.random.uniform([-0.5, -0.5, 1.0], [0.5, 0.5, 1.6])
+camera_loc = np.random.uniform([-0.05, -0.425, 1.05], [0.05, -0.325, 1.35])
 poi = np.random.uniform([-0.2, -0.2, 0.3], [0.2, 0.2, 0.3])
 
 camera_rot = bproc.camera.rotation_from_forward_vec(poi - camera_loc, inplane_rot=np.random.uniform(-np.pi, np.pi))
@@ -143,9 +143,9 @@ elif CAMERA == "ZED":
     noise = np.round(np.random.normal(0, 1.5, (720, 1280, 3))).astype(np.int32)
 noised_color = np.clip(unnoised_color.astype(np.int32) + noise, 0, 255).astype(np.uint8)
 data["colors"] = [noised_color]
-data["pc"] = [points]
 data["grasps_tf"] = [grasps_tf]
 data["grasps_scores"] = [grasps_scores]
+data["intrinsic"] = [K]
 data["extrinsic"] = [camera_extrinsic]
 data["original_obj_paths"] = [np.array(obj_file_list, dtype=np.string_)]
 data["obj_poses"] = [obj_poses[:-1, :, :]]

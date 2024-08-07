@@ -533,6 +533,7 @@ class DataGenerator(tf.keras.utils.Sequence):
                     cyl.apply_translation(point)
                     cyl.visual.face_colors = [int(255*score), 0, 255 - int(255*score), 255]
                     scene.add_geometry(cyl)
+            scene.add_geometry(creation.axis(0.02, axis_radius=0.01))
             scene.show()
 
         selected_point_cloud = np.expand_dims(selected_point_cloud, axis=0)

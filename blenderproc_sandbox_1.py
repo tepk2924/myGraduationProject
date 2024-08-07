@@ -30,8 +30,8 @@ for obj in objs:
                           [0, 0, 0, 1]]))
 
 mat:List[MaterialUtility.Material] = objs[0].get_materials()
-mat[0].set_principled_shader_value("Roughness", 1)
-mat[0].set_principled_shader_value("Metallic", 0.5)
+mat[0].set_principled_shader_value("Roughness", 0)
+mat[0].set_principled_shader_value("Specular", 1)
 
 # lightobj = bproc.filter.by_attr(objs, "name", "37786.001")
 # print(lightobj)
@@ -44,14 +44,14 @@ deg = math.pi/180
 lights = []
 
 #Light Source: 1-5 light sources
-for _ in range(light_num := random.randint(1, 5)):
-    theta = 2*math.pi*random.random()
-    phi = 20*deg + (70*deg)*random.random()
+for i in range(5):
+    theta = 2*i*math.pi/5
+    phi = 50*deg
     dist = 1.8
     lights.append(bproc.types.Light())
     lights[-1].set_type("POINT")
     lights[-1].set_location([dist*math.cos(phi)*math.cos(theta), dist*math.cos(phi)*math.sin(theta), 0.3 + dist*math.sin(phi)])
-    lights[-1].set_energy(250/light_num + 250*random.random()/light_num)
+    lights[-1].set_energy(250)
 
 CAMERA = "ZED"
 

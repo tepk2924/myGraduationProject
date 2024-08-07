@@ -11,7 +11,7 @@ if __name__ == "__main__":
 
     table = trimesh.creation.box([7.5, 7.5, 0.6])
     my_scene.plot_mesh(table, color=[127, 127, 127, 100])
-    table_support = trimesh.creation.box([1.0, 1.0, 0.6])
+    table_support = trimesh.creation.box([0.75, 0.75, 0.6])
     my_scene.plot_mesh(table_support, color=[255, 0, 0, 255])
 
 
