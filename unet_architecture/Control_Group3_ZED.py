@@ -218,10 +218,10 @@ class DataGenerator(tf.keras.utils.Sequence):
         with h5py.File(os.path.join(self.data_dir, scene_name), "r") as f:
             segmap = np.array(f["category_id_segmaps"]) #(image_height, image_width), np.int64
             colors = np.array(f["colors"]) #(image_height, image_width, 3) np.uint8
-            point_cloud = np.array(f["pc"]) #(image_height*image_width, 3) np.float32
+            # point_cloud = np.array(f["pc"]) #(image_height*image_width, 3) np.float32
             depth = np.array(f["depth"]) #(image_height, image_width) np.float32
-            grasps_tf = np.array(f["grasps_tf"])
-            grasps_scores = np.array(f["grasps_scores"])
+            # grasps_tf = np.array(f["grasps_tf"])
+            # grasps_scores = np.array(f["grasps_scores"])
 
         image_height = colors.shape[0]
         image_width = colors.shape[1]
