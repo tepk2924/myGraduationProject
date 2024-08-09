@@ -1,0 +1,12 @@
+2024/8/9
+1. By now, I created total two unet model.
+2. I make 'virtual dataset' mimicking real photo by rendering several objects
+3. First model (unet_model_improveddataset) was made using IPA-3D1K dataset, DTD dataset, and 
+
+--Things that can be invalid
+    A pile of chain rope
+    A pile of electric wire
+    A knitted small basket
+    A grid tray
+    A gridded pencil holder
+    A mini fan

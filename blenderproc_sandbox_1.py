@@ -13,7 +13,8 @@ sys.path.append(os.path.dirname(__file__))
 
 filepath = "/home/tepk2924/tepk2924Works/myGraduationProject/DataSet/train/32770_Thingi10K/32770.obj"
 
-bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
+#Initializing the blenderproc is must.
+bproc.init()
 
 objs: List[MeshObjectUtility.MeshObject] = bproc.loader.load_obj(filepath)
 

@@ -36,7 +36,8 @@ obj_poses = np.concatenate((obj_poses, np.array([[[1, 0, 0, 0],
                                                   [0, 0, 1, 0],
                                                   [0, 0, 0, 1]]])), axis=0)
 
-bproc.init() # 이 줄이 없으면 249장을 추가로 렌더링하게 됨.
+#Initializing the blenderproc is must.
+bproc.init()
 
 objs: List[MeshObjectUtility.MeshObject] = []
 for obj_file_path in obj_file_list:
@@ -77,7 +78,7 @@ for obj, pose in zip(objs, obj_poses):
 deg = math.pi/180
 lights = []
 
-#광원 배치 : 1개부터 5개까지 랜덤
+#Light source: randomly places 1 to 5 point light sources
 for _ in range(light_num := random.randint(1, 5)):
     theta = 2*math.pi*random.random()
     phi = 20*deg + (70*deg)*random.random()
@@ -95,9 +96,6 @@ if CAMERA == "RealSense":
                 [0, 0, 1]])
     bproc.camera.set_intrinsics_from_K_matrix(K, 640, 480) #Intel RealSense
 elif CAMERA == "ZED":
-    # K = np.array([[676.5935668945312, 0, 609.4650268554688],
-    #             [0, 676.5935668945312, 366.338134765625],
-    #             [0, 0, 1]])
     K = np.array([[676.5935668945312, 0, 640],
                 [0, 676.5935668945312, 360],
                 [0, 0, 1]])
