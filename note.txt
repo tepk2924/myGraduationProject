@@ -1,7 +1,7 @@
 2024/8/9
 1. By now, I created total two unet model.
 2. I make 'virtual dataset' mimicking real photo by rendering several objects
-3. First model (unet_model_improveddataset) was made using IPA-3D1K dataset, DTD dataset, and 
+3. First model (unet_model_improveddataset) was made using IPA-3D1K dataset, DTD dataset, and ...
 
 --Things that can be invalid
     A pile of chain rope
@@ -10,3 +10,6 @@
     A grid tray
     A gridded pencil holder
     A mini fan
+
+2024/8/10
+1. I am going to make new unet model. Upon creation, I will not use any of 3D objects out of Thingi10K. Since these objects generally have more complex geometry than those of IPA-3D1K, it will make some invalid texture look like valid.
