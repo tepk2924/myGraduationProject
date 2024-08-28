@@ -1,7 +1,8 @@
 2024/8/9
 1. By now, I created total two unet model.
 2. I make 'virtual dataset' mimicking real photo by rendering several objects
-3. First model (unet_model_improveddataset) was made using IPA-3D1K dataset, DTD dataset, and ...
+3. First model (unet_model_improveddataset) with first dataset was made using IPA-3D1K dataset, DTD dataset fully.
+4. Second model with second dataset was made and this time I created scene with a table + a floor with given prepared floor + table textures. (In comparison, firsr dataset only contained floor, not table.)
 
 --Things that can be invalid
     A pile of chain rope
@@ -12,4 +13,13 @@
     A mini fan
 
 2024/8/10
-1. I am going to make new unet model. Upon creation, I will not use any of 3D objects out of Thingi10K. Since these objects generally have more complex geometry than those of IPA-3D1K, it will make some invalid texture look like valid.
+1. Second model & dataset showed terrible (almost every pixel is background.)
+2. I am going to make third unet model & dataset. Upon creation, I will not use any of 3D objects out of Thingi10K. Since these objects generally have more complex geometry than those of IPA-3D1K, it will make some invalid texture look like valid.
+
+2024/8/19
+1. To approach the problem numerically, I am going to take a real photo of scene containing 1 to 5 object, with various textures, and label them whether it is valid texture for grasping with suction cup or not.
+
+2024/8/28
+1. Taking real photo & labelling (not only validity, I also labelled them with type of each object such as "Thread", "Pencil Case", etc.) was done.
+2. I test the first and the third model with real photo & depth map. The first model have tendency of judging invalid pixel of photo as valid, and vice versa for the third model.
+3. Now I want to make some "middle point" of these two models(1st, 3rd)....
