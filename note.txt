@@ -23,3 +23,7 @@
 1. Taking real photo & labelling (not only validity, I also labelled them with type of each object such as "Thread", "Pencil Case", etc.) was done.
 2. I test the first and the third model with real photo & depth map. The first model have tendency of judging invalid pixel of photo as valid, and vice versa for the third model.
 3. Now I want to make some "middle point" of these two models(1st, 3rd)....
+4. The glove and the pile of rope were generally judged as valid by both two models when it is actually invalid. I have to fix some invalid texture for dataset reflecting that.
+5. The trowel was generally judged as invalid by third model.
+6. Adding some metallic rendering (not all valid textures, but some of them) may be good for them?
+7. So I am going to make the fourth model & dataset to fix these problems.
