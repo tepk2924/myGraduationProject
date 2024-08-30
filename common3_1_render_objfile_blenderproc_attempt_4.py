@@ -70,7 +70,7 @@ for obj, pose in zip(objs, obj_poses):
         texture_filename = random.choice(os.listdir(texture_folder_tagged))
         mat = bproc.material.create_material_from_texture(os.path.join(texture_folder_tagged, texture_filename), texture_filename)
         mat.set_displacement_from_principled_shader_value("Base Color", multiply_factor=-2.0)
-        mat.set_principled_shader_value("Roughness", 1)
+        mat.set_principled_shader_value("Roughness", 0.7 + 0.3*random.random())
         obj.set_material(0, mat)
     else: #valid
         obj.set_cp("category_id", 2)
