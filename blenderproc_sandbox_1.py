@@ -31,8 +31,11 @@ for obj in objs:
                           [0, 0, 0, 1]]))
 
 mat:List[MaterialUtility.Material] = objs[0].get_materials()
-mat[0].set_principled_shader_value("Roughness", 0)
-mat[0].set_principled_shader_value("Specular", 1)
+print(mat[0].get_principled_shader_value("Roughness"))
+print(mat[0].get_principled_shader_value("Specular"))
+mat[0].set_principled_shader_value("Roughness", 1)
+print(mat[0].get_principled_shader_value("Roughness"))
+print(mat[0].get_principled_shader_value("Specular"))
 
 # lightobj = bproc.filter.by_attr(objs, "name", "37786.001")
 # print(lightobj)
