@@ -65,7 +65,7 @@ if __name__ == '__main__':
 
     image_folder = "/home/riseabb/johan_ws/build_dataset_chohan/Images_Annotations_All"
     depth_folder = "/home/riseabb/johan_ws/build_dataset_chohan/Depths"
-    segmap_save_folder = os.path.join("/home/riseabb/johan_ws/build_dataset_chohan/Pred_segmaps", saved_model_name)
+    segmap_save_folder = os.path.join("/home/riseabb/johan_ws/build_dataset_chohan/Pred_segmaps", f"{saved_model_name}_E{target_epoch}")
     if not os.path.isdir(segmap_save_folder):
         os.makedirs(segmap_save_folder)
 
