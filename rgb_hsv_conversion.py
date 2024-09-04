@@ -33,6 +33,7 @@ def rgb_to_hsv(img: np.ndarray) -> np.ndarray:
     return HSVmap
 
 def hsv_to_rgb(HSVmap:np.ndarray) -> np.ndarray:
+    "Vice versa"
     C = HSVmap[:, :, 1]*HSVmap[:, :, 2]
     X = C*(1 - np.abs(6*HSVmap[:, :, 0]%2 - 1))
     m = HSVmap[:, :, 2] - C
