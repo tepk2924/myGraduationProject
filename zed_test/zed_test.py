@@ -36,6 +36,13 @@ point_cloud_np = pc.get_data()
 point_cloud_np[:, :, [1, 2]] *= -1
 print(point_cloud_np.shape)
 
+zed_info = zed.get_camera_information()
+K = zed_info.camera_configuration.calibration_parameters.left_cam
+
+intrinsic = np.array([[K.fx, 0, K.cx],
+                      [0, K.fy, K.cy],
+                      [0, 0, 1]])
+
 Image.fromarray(rgb_left_np, "RGB").save(os.path.join(target_folder, "Image.png"))
 with open(os.path.join(target_folder, "depth_binary.npy"), "wb") as f:
     np.save(f, depth_np)
@@ -43,3 +50,5 @@ with open(os.path.join(target_folder, "point_cloud.npy"), "wb") as f:
     np.save(f, point_cloud_np)
 with open(os.path.join(target_folder, "rgb.npy"), "wb") as f:
     np.save(f, rgb_left_np)
+with open(os.path.join(target_folder, "intrinsic.npy"), "wb") as f:
+    np.save(f, intrinsic)

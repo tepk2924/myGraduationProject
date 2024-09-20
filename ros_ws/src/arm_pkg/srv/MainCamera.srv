@@ -2,3 +2,4 @@
 sensor_msgs/Image img
 std_msgs/Float32MultiArray depth
 std_msgs/Float32MultiArray pointcloud
+std_msgs/Float32MultiArray intrinsic

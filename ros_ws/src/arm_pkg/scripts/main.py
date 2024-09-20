@@ -8,17 +8,22 @@ from arm_pkg.srv import RobotMain, RobotMainResponse
 from arm_pkg.srv import MainCamera, MainCameraRequest, MainCameraResponse
 from arm_pkg.srv import MainUnet, MainUnetRequest, MainUnetResponse
 from arm_pkg.srv import MainSgnet, MainSgnetRequest, MainSgnetResponse
-from sensor_msgs.msg import Image
+from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import Float32MultiArray, Int16MultiArray
 from cv_bridge import CvBridge, CvBridgeError
+from geometry_msgs.msg import PoseArray, Pose
 from PIL import Image as pilimage
 import numpy as np
-import trimesh
 from trimesh import creation
 import rospy
+import ros_numpy
 
-pub = rospy.Publisher('chatter', Image, queue_size=2)
+pointcloud_publisher = rospy.Publisher('/pointcloud', PointCloud2, queue_size=10)
 bridge = CvBridge()
+with open(os.path.join(os.path.dirname(__file__), "camera_tf.txt"), "r") as f:
+    lines = f.readlines()[-4:]
+
+camera_tf = np.array([list(map(float, line.split())) for line in lines])
 
 def callback(req):
     rospy.wait_for_service("main_camera")
@@ -28,8 +33,43 @@ def callback(req):
     depth = resp1.depth
     pc = resp1.pointcloud
     pc_np = np.array(pc.data).reshape((-1, 3)) #(720*1280, 3)
+    print(pc_np)
+    pc_world = np.ones((4, pc_np.shape[0]), np.float32)
+    pc_world[:3, :] = pc_np.T
+    print(pc_world)
+    pc_world = camera_tf @ pc_world
     img_np = bridge.imgmsg_to_cv2(image, "rgb8")
+
+    r = img_np[:, :, 0].reshape((-1))
+    g = img_np[:, :, 1].reshape((-1))
+    b = img_np[:, :, 2].reshape((-1))
+    xyz = np.array(pc_world.T[:, :3]).reshape((-1, 3))
+    x = xyz[:, 0].reshape((-1))
+    y = xyz[:, 1].reshape((-1))
+    z = xyz[:, 2].reshape((-1))
+
+    data = np.zeros(len(r), dtype=[('x', np.float32),
+                                   ('y', np.float32),
+                                   ('z', np.float32),
+                                   ('r', np.uint8),
+                                   ('g', np.uint8),
+                                   ('b', np.uint8)])
+
+    data['x'] = x
+    data['y'] = y
+    data['z'] = z
+    data['r'] = r
+    data['g'] = g
+    data['b'] = b
+
+    pointcloud_xyzrgb_msg = ros_numpy.point_cloud2.array_to_pointcloud2(data,
+                                                                        None,
+                                                                        "base_link")
+    pointcloud_publisher.publish(pointcloud_xyzrgb_msg)
+
     pilimage.fromarray(img_np, "RGB").save(os.path.join(os.path.dirname(__file__), "Image.png"))
+
+    '''
     service_req_unet_segmap = rospy.ServiceProxy("main_unet", MainUnet)
     resp2:MainUnetResponse = service_req_unet_segmap(image, depth)
     segmap_np: np.ndarray = np.array(resp2.segmap.data) #(720*1280)
@@ -93,22 +133,16 @@ def callback(req):
     approaches_filtered_msg.data = approaches_filtered.reshape((-1)).tolist()
 
     pc_np = np.nan_to_num(pc_np)
-    scene = trimesh.Scene()
-    scene.add_geometry(trimesh.PointCloud(pc_np, np.pad(img_np.reshape((-1, 3)), ((0, 0), (0, 1)), mode='constant', constant_values=255)))
-    for point, approach in zip(pc_filtered, approaches_filtered):
-        rot_trans = trimesh.geometry.align_vectors([0, 0, 1], approach)
-        cyl = creation.cylinder(0.001, 0.05, 3)
-        cyl.apply_translation([0, 0, 0.025])
-        cyl.apply_transform(rot_trans)
-        cyl.apply_translation(point)
-        scene.add_geometry(cyl)
-        scene.add_geometry(creation.axis())
-    scene.show(line_settings={'point_size':0.05})    
-    
+    '''
+    pc_filtered_msg = Float32MultiArray()
+    scores_filtered_msg = Float32MultiArray()
+    approaches_filtered_msg = Float32MultiArray()
+
     return RobotMainResponse(pc_filtered_msg,
                              scores_filtered_msg,
                              approaches_filtered_msg)
 
-rospy.init_node("main")
-service_as_server = rospy.Service("robot_main_service", RobotMain, callback)
-rospy.spin()
+if __name__ == "__main__":
+    rospy.init_node("main")
+    service_as_server = rospy.Service("robot_main_service", RobotMain, callback)
+    rospy.spin()

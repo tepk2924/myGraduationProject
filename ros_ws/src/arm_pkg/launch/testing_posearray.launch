@@ -1,0 +1,4 @@
+<launch>
+    <node pkg="arm_pkg" type="test_publishing_posearray.py" name="test_publishing_posearray" respawn="false" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz"/>
+</launch>

@@ -17,4 +17,9 @@ print(f"{left_cam_info.cx = }")
 print(f"{left_cam_info.cy = }")
 print(f"{left_cam_info.fx = }")
 print(f"{left_cam_info.fy = }")
+print(f"{left_cam_info.disto = }")
+print(f"{left_cam_info.d_fov = }")
+print(f"{left_cam_info.h_fov = }")
+
+
 print(dir(left_cam_info))

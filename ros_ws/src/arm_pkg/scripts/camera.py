@@ -38,8 +38,8 @@ def callback(req):
         # Retrieve colored point cloud. Point cloud is aligned on the left image.
         zed.retrieve_measure(point_cloud, sl.MEASURE.XYZRGBA)
         zed.retrieve_image(rgb_left, sl.VIEW.LEFT)
+        K = zed.get_camera_information().camera_configuration.calibration_parameters.left_cam
         rgb_left_np = rgb_left.get_data()[:, :, :3]
-        print(f"{rgb_left_np.shape = }")
         rgb_left_np[:, :, [0, 2]] = rgb_left_np[:, :, [2, 0]]
         depth_np:np.ndarray = depth.get_data()
         depth_msg = Float32MultiArray()
@@ -47,10 +47,18 @@ def callback(req):
         image_msg: Image = bridge.cv2_to_imgmsg(rgb_left_np, "rgb8")
         pc_np:np.ndarray = point_cloud.get_data()[:, :, :3]
         pc_np[:, :, [1, 2]] *= -1
+        pc_np[:, :, 2] -= 0.06
+        pc_np[:, :, 1] += 0.03 #Camera coordinate origin calculated by PnP and the coordinate origin that ZED SDK uses are different. I really don't want to do this task like this.....
         pc_msg = Float32MultiArray()
         pc_msg.data = pc_np.reshape((-1)).tolist()
-    return MainCameraResponse(image_msg, depth_msg, pc_msg)
+        intrinsic_np = np.array([[K.fx, 0, K.cx],
+                                 [0, K.fy, K.cy],
+                                 [0,    0,    1]])
+        intrinsic_msg = Float32MultiArray()
+        intrinsic_msg.data = intrinsic_np.reshape((-1)).tolist()
+        
+    return MainCameraResponse(image_msg, depth_msg, pc_msg, intrinsic_msg)
 
-rospy.init_node("main")
+rospy.init_node("camera")
 service = rospy.Service("main_camera", MainCamera, callback)
 rospy.spin()

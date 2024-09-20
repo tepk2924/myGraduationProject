@@ -6,14 +6,21 @@ import moveit_commander
 import tf
 import cv2
 import numpy as np
-import time
+import os
 import pyzed.sl as sl
 
+from PIL import Image
 from cv_bridge import CvBridge, CvBridgeError
 from geometry_msgs.msg import Pose, PoseStamped
+from visualization_msgs.msg import Marker, MarkerArray
 from arm_pkg.srv import MainCamera, MainCameraRequest, MainCameraResponse
+from moveit_commander import PlanningSceneInterface
+import tf.transformations
 
 bridge = CvBridge()
+scene = PlanningSceneInterface()
+markerarray_pub = rospy.Publisher('/Chess_Points', MarkerArray, queue_size=10)
+print(dir(scene))
 
 if __name__ == '__main__':
     rospy.init_node("solvePnP")
@@ -21,7 +28,11 @@ if __name__ == '__main__':
     service_req_image_depth = rospy.ServiceProxy("main_camera", MainCamera)
     resp:MainCameraResponse = service_req_image_depth()
     image = resp.img
+    K = np.array(resp.intrinsic.data)
+    K = K.reshape((3, 3))
+    print(K)
     img_np = bridge.imgmsg_to_cv2(image, "rgb8")
+    img_np_copy = bridge.imgmsg_to_cv2(image, "rgb8")
 
     criteria = (cv2.TERM_CRITERIA_EPS + cv2.TERM_CRITERIA_MAX_ITER, 30, 0.001)
 
@@ -29,8 +40,22 @@ if __name__ == '__main__':
 
     ret, corners = cv2.findChessboardCorners(gray_img, (6, 5), None)
     if ret == True:
-        corners = cv2.cornerSubPix(gray_img, corners, (11, 11), (-1, -1),
-                                        criteria)
+        font = cv2.FONT_HERSHEY_SIMPLEX
+        corners = cv2.cornerSubPix(gray_img, corners, (11, 11), (-1, -1), criteria)
+        corners = np.squeeze(corners)
+        for idx, point in enumerate(corners):
+            img_np_copy = cv2.circle(img_np_copy, tuple(point),
+                                     10,
+                                     (0, 0, 255),
+                                     -1)
+            img_np_copy = cv2.putText(img_np_copy,
+                                      f"{idx:02d}",
+                                      tuple(point),
+                                      font,
+                                      0.5,
+                                      (255, 0, 0))
+        Image.fromarray(img_np_copy).save(os.path.join(os.path.dirname(__file__), "Founded_ChessPoint.png"))
+            
     else:
         print("No chessboard found")
         exit(1)
@@ -75,7 +100,7 @@ if __name__ == '__main__':
                     pose_stamped_i.pose.position.z
                 ])
 
-            obj_points = np.array(obj_points)
+            obj_points_np = np.array(obj_points)
         except tf.LookupException:
             pass
         except tf.ConnectivityException:
@@ -85,24 +110,67 @@ if __name__ == '__main__':
         else:
             break
     flags = cv2.SOLVEPNP_ITERATIVE
-    K = np.array([[670.829833984375, 0, 609.4638671875],
-                  [0, 670.829833984375, 366.3249816894531],
-                  [0, 0, 1]])
     dist_coeffs = np.zeros((4, 1))
-    retval, r_vector, t_vector = cv2.solvePnP(obj_points,
-                                      corners,
-                                      K,
-                                      dist_coeffs,
-                                      flags=flags)
+    retval, r_vector, t_vector = cv2.solvePnP(obj_points_np,
+                                            corners,
+                                            K,
+                                            dist_coeffs,
+                                            flags=flags)
     
     r_matrix = np.zeros((3, 3))
     cv2.Rodrigues(r_vector, r_matrix)
     r_inv = np.linalg.inv(r_matrix)
     t_vector = np.dot(-r_inv, t_vector)
 
-    proj_matrix = np.zeros(shape=(4, 4))
-    proj_matrix[0:3, 0:3] = r_inv
-    proj_matrix[0:3, 3:] = t_vector
-    proj_matrix[3, 3] = 1
+    cam_trans = np.zeros(shape=(4, 4))
+    cam_trans[0:3, 0:3] = r_inv
+    cam_trans[0:3, 3:] = t_vector
+    cam_trans[3, 3] = 1
+    cam_trans[:, 1] *= -1
+    cam_trans[:, 2] *= -1
 
-    print(proj_matrix)
+    arr = cam_trans.tolist()
+
+    with open(os.path.join(os.path.dirname(__file__), "camera_tf.txt"), "a") as f:
+        f.write("="*30 + "\n")
+        for row in arr:
+            f.write(" ".join(map(str, row)) + "\n")
+
+    broadcaster = tf.TransformBroadcaster()
+    rate = rospy.Rate(10.0)
+    quat = tf.transformations.quaternion_from_matrix(cam_trans)
+    trans = tf.transformations.translation_from_matrix(cam_trans)
+
+    while not rospy.is_shutdown():
+        markerarray = MarkerArray()
+        for idx, pos in enumerate(obj_points):
+            marker = Marker()
+            marker.header.frame_id = "base_link"
+            marker.type = marker.SPHERE
+            marker.action = marker.ADD
+            marker.id = idx
+            marker.pose.position.x, marker.pose.position.y, marker.pose.position.z = tuple(pos)
+            marker.color.a = 1.0
+            marker.color.r = 1.0
+            marker.color.g = 0.0
+            marker.color.b = 1.0
+            marker.scale.x = 0.001
+            marker.scale.y = 0.001
+            marker.scale.z = 0.001
+            marker.pose.orientation.x = 0.0
+            marker.pose.orientation.y = 0.0
+            marker.pose.orientation.z = 0.0
+            marker.pose.orientation.w = 1.0
+            markerarray.markers.append(marker)
+        markerarray_pub.publish(markerarray)
+        broadcaster.sendTransform(translation=trans,
+                                  rotation=quat,
+                                  time=rospy.Time.now(),
+                                  child="camera",
+                                  parent="base_link"
+                                  )
+        rate.sleep()
+
+#Maybr I can utilize cv2.calbrateCamera which spits out
+#retval, cameraMatrix (camera intrinsic is one of output as well), distCoeffs, rvecs, tvecs
+#Without input of camera intrinsics.

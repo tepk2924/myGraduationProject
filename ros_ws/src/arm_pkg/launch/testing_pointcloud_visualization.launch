@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="arm_pkg" type="camera.py" name="camera" respawn="false" output="screen"/>
+    <node pkg="arm_pkg" type="getPointcloud_visualize.py" name="getPointcloud_visualize" respawn="false" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz" args="-d /home/riseabb/johan_ws/myGraduationProject/ros_ws/src/arm_pkg/launch/testPointcloud.rviz"/>
+</launch>
