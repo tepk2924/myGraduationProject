@@ -19,8 +19,11 @@ from std_msgs.msg import Float32MultiArray
 from scipy import signal
 from arm_pkg.srv import MainSgnet, MainSgnetResponse, MainSgnetRequest
 
+#Parameters
 model_name = rospy.get_param("sgnet_model_name")
 target_epoch = rospy.get_param("sgnet_target_epoch")
+
+#Initializations
 project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 sys.path.append(project_dir)
 arch = importlib.import_module(f"sgnet_checkpoints.{model_name}.sgnet_architecture")

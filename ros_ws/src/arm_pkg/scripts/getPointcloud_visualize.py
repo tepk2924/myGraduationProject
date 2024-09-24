@@ -9,6 +9,7 @@ import numpy as np
 import os
 import pyzed.sl as sl
 import ros_numpy
+import struct
 
 from PIL import Image
 from cv_bridge import CvBridge, CvBridgeError
@@ -16,7 +17,8 @@ from geometry_msgs.msg import Pose, PoseStamped
 from arm_pkg.srv import MainCamera, MainCameraRequest, MainCameraResponse
 from arm_pkg.srv import RobotMain, RobotMainResponse
 from std_msgs.msg import Float32MultiArray
-from sensor_msgs.msg import PointCloud2
+from sensor_msgs.msg import PointCloud2, PointField
+from sensor_msgs import point_cloud2
 import tf.transformations
 
 bridge = CvBridge()
@@ -52,10 +54,13 @@ def callback(req):
     data['g'] = g
     data['b'] = b
 
-    # pointcloud_xyzrgb_msg = ros_numpy.msgify(PointCloud2, data)
+    # pointcloud_xyzrgb_msg:PointCloud2 = ros_numpy.msgify(PointCloud2, data)
     pointcloud_xyzrgb_msg = ros_numpy.point_cloud2.array_to_pointcloud2(data,
-                                                                        None,
-                                                                        "frame1")
+                                                                         None,
+                                                                         "frame1")
+    # pointcloud_xyzrgb_msg.header.frame_id = "map"
+
+
     pointcloud_pub.publish(pointcloud_xyzrgb_msg)
 
     pc_msg = Float32MultiArray()

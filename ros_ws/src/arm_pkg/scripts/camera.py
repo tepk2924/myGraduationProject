@@ -13,7 +13,7 @@ import pyzed.sl as sl
 zed = sl.Camera()
 # Create a InitParameters object and set configuration parameters
 init_params = sl.InitParameters()
-init_params.depth_mode = sl.DEPTH_MODE.NEURAL  # Use QUALITY depth mode
+init_params.depth_mode = sl.DEPTH_MODE.NEURAL  # Use NEURAL depth mode
 init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
 
 # Open the camera
@@ -46,9 +46,15 @@ def callback(req):
         depth_msg.data = depth_np.reshape((-1)).tolist()
         image_msg: Image = bridge.cv2_to_imgmsg(rgb_left_np, "rgb8")
         pc_np:np.ndarray = point_cloud.get_data()[:, :, :3]
+
+        #Converting camera based coordinate system
         pc_np[:, :, [1, 2]] *= -1
+
+        #Camera coordinate origin calculated by PnP and the coordinate origin that ZED SDK uses are different. I really don't want to do this task like this.....
         pc_np[:, :, 2] -= 0.06
-        pc_np[:, :, 1] += 0.03 #Camera coordinate origin calculated by PnP and the coordinate origin that ZED SDK uses are different. I really don't want to do this task like this.....
+        pc_np[:, :, 1] += 0.03
+
+        #Creating & Returning msgs containing PointCloud data and intrinsic camera matrix.
         pc_msg = Float32MultiArray()
         pc_msg.data = pc_np.reshape((-1)).tolist()
         intrinsic_np = np.array([[K.fx, 0, K.cx],

@@ -21,11 +21,16 @@ from cv_bridge import CvBridge, CvBridgeError
 from scipy import signal
 from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
 
+#msg -- np.ndarray bridge
 bridge = CvBridge()
+
+#Parameters
 model_name = rospy.get_param("unet_model_name")
 target_epoch = rospy.get_param("unet_target_epoch")
 image_height = rospy.get_param("image_height")
 image_width = rospy.get_param("image_width")
+
+#Some initializations
 RGBDE_normalized = np.ndarray((image_height, image_width, 5), dtype=float)
 project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
 sys.path.append(project_dir)
@@ -49,34 +54,38 @@ else:
 model.load_weights(weight_file)
 
 def callback(req:MainUnetRequest):
+    #Msg to np.ndarray
     cv_image:np.ndarray = bridge.imgmsg_to_cv2(req.img, "rgb8")
-    laplacian = np.array([[1, 4, 1],
-                            [4,-20, 4],
-                            [1, 4, 1]])
+
+    #RGB channel, normalized
     RGBDE_normalized[:, :, :3] = cv_image/255.
+
+    #Depth channel
+    depth_np = np.array(req.depth.data, dtype=float).reshape((image_height, image_width))
+    depth_np = np.nan_to_num(depth_np)
+    RGBDE_normalized[:, :, 3] = (depth_np - np.mean(depth_np))/np.std(depth_np)
+
+    #Edge detection, normalized
+    laplacian = np.array([[1, 4, 1],
+                          [4,-20, 4],
+                          [1, 4, 1]])
     kernaled = (signal.convolve2d(cv_image[:, :, 0], laplacian, mode="same", boundary="symm")**2 + 
                 signal.convolve2d(cv_image[:, :, 1], laplacian, mode="same", boundary="symm")**2 + 
                 signal.convolve2d(cv_image[:, :, 2], laplacian, mode="same", boundary="symm")**2)
     RGBDE_normalized[:, :, 4] = (kernaled - np.mean(kernaled))/np.std(kernaled)
-    depth_np = np.array(req.depth.data, dtype=float).reshape((image_height, image_width))
-    depth_np = np.nan_to_num(depth_np)
-    RGBDE_normalized[:, :, 3] = (depth_np - np.mean(depth_np))/np.std(depth_np)
+
+    #RGBDE goes into the model, spitting out logit
     logit = model(tf.expand_dims(tf.convert_to_tensor(RGBDE_normalized, dtype=tf.float32), axis=0), training=False)
+
+    #Logit -> Pred_segmap
     pred_segmap_prob = tf.nn.softmax(logit)
     pred = tf.argmax(pred_segmap_prob, axis=-1)
     pred_segmap:np.ndarray = tf.squeeze(pred, axis=0).numpy()
 
-    # print(f"{pred_segmap = }")
-
+    #Msgify, Return
     segmap_msg = Int16MultiArray()
     segmap_msg.data = pred_segmap.reshape((-1)).tolist()
 
-    # convert_RGB = np.array([[255, 0, 0],
-    #                         [0, 255, 0],
-    #                         [0, 0, 255]], dtype=np.uint8)
-
-    # pred_segmap_RGB = convert_RGB[pred_segmap]
-    # segmap_msg = bridge.cv2_to_imgmsg(pred_segmap_RGB, "rgb8")
     return MainUnetResponse(segmap_msg)
 
 rospy.init_node("unet")
