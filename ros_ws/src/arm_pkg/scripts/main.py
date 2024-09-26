@@ -11,8 +11,8 @@ from arm_pkg.srv import Execution, ExecutionRequest, ExecutionResponse
 from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import Float32MultiArray, Int16MultiArray, ColorRGBA
 from cv_bridge import CvBridge, CvBridgeError
-from geometry_msgs.msg import Point, Quaternion, Vector3
-from visualization_msgs.msg import Marker, MarkerArray
+# from geometry_msgs.msg import Point, Quaternion, Vector3
+# from visualization_msgs.msg import Marker, MarkerArray
 from PIL import Image as pilimage
 import numpy as np
 import rospy
@@ -23,7 +23,7 @@ def init():
     global pointcloud_publisher
     global grasps_pub
     pointcloud_publisher = rospy.Publisher('/pointcloud', PointCloud2, queue_size=10)
-    grasps_pub = rospy.Publisher('/grasps', MarkerArray, queue_size=10)
+    # grasps_pub = rospy.Publisher('/grasps', MarkerArray, queue_size=10)
 
     #To convert ROS msg from np.ndarray used by cv2, this code is needed.
     global bridge
@@ -106,8 +106,8 @@ def callback(req: ExecutionRequest):
     for point, segmentation in zip(pc_np, segmap_np):
         point_segmap_dict[tuple(point)] = segmentation
 
-    THRESHOLD = np.quantile(scores_np, 0.5)
-    selected_idx = np.where(scores_np >= THRESHOLD)[0]
+    theshold = np.quantile(scores_np, 0.5)
+    selected_idx = np.where(scores_np >= theshold)[0]
     pc_thresholded = pc_result_np[selected_idx]
     scores_thresholded = scores_np[selected_idx]
     approaches_thresholded = approaches_np[selected_idx]
