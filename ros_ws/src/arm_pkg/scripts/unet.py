@@ -21,37 +21,43 @@ from cv_bridge import CvBridge, CvBridgeError
 from scipy import signal
 from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
 
-#msg -- np.ndarray bridge
-bridge = CvBridge()
+def init():
+    #msg -- np.ndarray bridge
+    global bridge
+    bridge = CvBridge()
 
-#Parameters
-model_name = rospy.get_param("unet_model_name")
-target_epoch = rospy.get_param("unet_target_epoch")
-image_height = rospy.get_param("image_height")
-image_width = rospy.get_param("image_width")
+    #Parameters
+    model_name = rospy.get_param("unet_model_name")
+    target_epoch = rospy.get_param("unet_target_epoch")
+    global image_height
+    global image_width
+    image_height = rospy.get_param("image_height")
+    image_width = rospy.get_param("image_width")
 
-#Some initializations
-RGBDE_normalized = np.ndarray((image_height, image_width, 5), dtype=float)
-project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
-sys.path.append(project_dir)
-arch = importlib.import_module(f"unet_checkpoints.{model_name}.unet_architecture")
-saved_model_dir = os.path.join(os.path.join(project_dir, "unet_checkpoints"), model_name)
-with open(os.path.join(saved_model_dir, "hyperparameters.yml"), 'r') as f:
-    hyperparameters = yaml.safe_load(f)
-inputs, outputs = arch.build_unet_graph(hyperparameters)
-model = arch.Unet(inputs, outputs)
-weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
-weight_filelist.sort()
-epoch_list = [int(os.path.basename(weight_file).split('-')[0]) for weight_file in weight_filelist]
-epoch_list = np.array(epoch_list)
-if target_epoch == -1:
-    weight_file = weight_filelist[-1]
-    target_epoch = epoch_list[-1]
-else:
-    idx = np.where(epoch_list == target_epoch)[0][0]
-    weight_file = weight_filelist[idx]
-    target_epoch = epoch_list[idx]
-model.load_weights(weight_file)
+    #Some initializations
+    global RGBDE_normalized
+    RGBDE_normalized = np.ndarray((image_height, image_width, 5), dtype=float)
+    project_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))))
+    sys.path.append(project_dir)
+    arch = importlib.import_module(f"unet_checkpoints.{model_name}.unet_architecture")
+    saved_model_dir = os.path.join(os.path.join(project_dir, "unet_checkpoints"), model_name)
+    with open(os.path.join(saved_model_dir, "hyperparameters.yml"), 'r') as f:
+        hyperparameters = yaml.safe_load(f)
+    inputs, outputs = arch.build_unet_graph(hyperparameters)
+    global model
+    model = arch.Unet(inputs, outputs)
+    weight_filelist = glob.glob(os.path.join(saved_model_dir, "weights/*.h5"))
+    weight_filelist.sort()
+    epoch_list = [int(os.path.basename(weight_file).split('-')[0]) for weight_file in weight_filelist]
+    epoch_list = np.array(epoch_list)
+    if target_epoch == -1:
+        weight_file = weight_filelist[-1]
+        target_epoch = epoch_list[-1]
+    else:
+        idx = np.where(epoch_list == target_epoch)[0][0]
+        weight_file = weight_filelist[idx]
+        target_epoch = epoch_list[idx]
+    model.load_weights(weight_file)
 
 def callback(req:MainUnetRequest):
     #Msg to np.ndarray
@@ -88,6 +94,8 @@ def callback(req:MainUnetRequest):
 
     return MainUnetResponse(segmap_msg)
 
-rospy.init_node("unet")
-service = rospy.Service("main_unet", MainUnet, callback)
-rospy.spin()
+if __name__ == "__main__":
+    init()
+    rospy.init_node("unet")
+    service = rospy.Service("main_unet", MainUnet, callback)
+    rospy.spin()

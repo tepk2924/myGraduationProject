@@ -3,10 +3,11 @@ import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
-from arm_pkg.srv import RobotMain, RobotMainResponse
+from arm_pkg.srv import MainRobot, MainRobotRequest, MainRobotResponse
 from arm_pkg.srv import MainCamera, MainCameraRequest, MainCameraResponse
 from arm_pkg.srv import MainUnet, MainUnetRequest, MainUnetResponse
 from arm_pkg.srv import MainSgnet, MainSgnetRequest, MainSgnetResponse
+from arm_pkg.srv import Execution, ExecutionRequest, ExecutionResponse
 from sensor_msgs.msg import Image, PointCloud2
 from std_msgs.msg import Float32MultiArray, Int16MultiArray, ColorRGBA
 from cv_bridge import CvBridge, CvBridgeError
@@ -17,19 +18,24 @@ import numpy as np
 import rospy
 import ros_numpy
 
-#Publisher initialization
-pointcloud_publisher = rospy.Publisher('/pointcloud', PointCloud2, queue_size=10)
-grasps_pub = rospy.Publisher('/grasps', MarkerArray, queue_size=10)
+def init():
+    #Publisher initialization
+    global pointcloud_publisher
+    global grasps_pub
+    pointcloud_publisher = rospy.Publisher('/pointcloud', PointCloud2, queue_size=10)
+    grasps_pub = rospy.Publisher('/grasps', MarkerArray, queue_size=10)
 
-#To convert ROS msg from np.ndarray used by cv2, this code is needed.
-bridge = CvBridge()
+    #To convert ROS msg from np.ndarray used by cv2, this code is needed.
+    global bridge
+    bridge = CvBridge()
 
-#Reads the last 4 lines of camera_tf.txt and take them as transform matrix of camera relative to the world(==base_link) frame
-with open(os.path.join(os.path.dirname(__file__), "camera_tf.txt"), "r") as f:
-    lines = f.readlines()[-4:]
-camera_tf = np.array([list(map(float, line.split())) for line in lines])
+    #Reads the last 4 lines of camera_tf.txt and take them as transform matrix of camera relative to the world(==base_link) frame
+    with open(os.path.join(os.path.dirname(__file__), "camera_tf.txt"), "r") as f:
+        lines = f.readlines()[-4:]
+    global camera_tf
+    camera_tf = np.array([list(map(float, line.split())) for line in lines])    
 
-def callback(req):
+def callback(req: ExecutionRequest):
     #Getting color image & depth & pointcloud from camera node
     rospy.wait_for_service("main_camera")
     service_req_image_depth = rospy.ServiceProxy("main_camera", MainCamera)
@@ -95,7 +101,7 @@ def callback(req):
     scores_np = np.array(resp3.scores.data).reshape((-1))
     approaches_np = np.array(resp3.approaches.data).reshape((-1, 3))
 
-    #Some processing
+    #Some processing, filtering grasps with higher scores
     point_segmap_dict = dict()
     for point, segmentation in zip(pc_np, segmap_np):
         point_segmap_dict[tuple(point)] = segmentation
@@ -120,20 +126,20 @@ def callback(req):
     pc_filtered_world = ((camera_tf[:3, :3] @ pc_filtered.T) + camera_tf[:3, 3:4]).T
     approaches_filtered_world = (camera_tf[:3, :3] @ approaches_filtered.T).T
 
-    #Publish world frame sgnet result
-    marker_array = MarkerArray()
-    for idx, (point, approach) in enumerate(zip(pc_filtered_world, approaches_filtered_world)):
-        marker = Marker()
-        marker.header.frame_id = "base_link"
-        marker.type = marker.ARROW
-        marker.id = idx
-        marker.color = ColorRGBA(0, 1, 0, 1)
-        marker.pose.position = Point(*point)
-        marker.pose.orientation = Quaternion(0, 0, 0, 1)
-        marker.scale = Vector3(0.005, 0.01, 0)
-        marker.points = [Point(*point), Point(*(point + 0.05*approach))]
-        marker_array.markers.append(marker)
-    grasps_pub.publish(marker_array)
+    # #Publish world frame sgnet result
+    # marker_array = MarkerArray()
+    # for idx, (point, approach) in enumerate(zip(pc_filtered_world, approaches_filtered_world)):
+    #     marker = Marker()
+    #     marker.header.frame_id = "base_link"
+    #     marker.type = marker.ARROW
+    #     marker.id = idx
+    #     marker.color = ColorRGBA(0, 1, 0, 1)
+    #     marker.pose.position = Point(*point)
+    #     marker.pose.orientation = Quaternion(0, 0, 0, 1)
+    #     marker.scale = Vector3(0.005, 0.01, 0)
+    #     marker.points = [Point(0, 0, 0), Point(*(0.05*approach))]
+    #     marker_array.markers.append(marker)
+    # grasps_pub.publish(marker_array)
 
     #Creating & Returning service for robot node
     pc_filtered_msg = Float32MultiArray()
@@ -144,11 +150,15 @@ def callback(req):
     scores_filtered_msg.data = scores_filtered.reshape((-1)).tolist()
     approaches_filtered_msg.data = approaches_filtered_world.reshape((-1)).tolist()
     
-    return RobotMainResponse(pc_filtered_msg,
-                             scores_filtered_msg,
-                             approaches_filtered_msg)
+    service_req_robot_move = rospy.ServiceProxy("main_robot", MainRobot)
+    resp4:MainRobotResponse = service_req_robot_move(pc_filtered_msg,
+                                                     scores_filtered_msg,
+                                                     approaches_filtered_msg)
+
+    return ExecutionResponse()
 
 if __name__ == "__main__":
+    init()
     rospy.init_node("main")
-    service_as_server = rospy.Service("robot_main_service", RobotMain, callback)
+    service_as_server = rospy.Service("execution", Execution, callback)
     rospy.spin()

@@ -58,10 +58,11 @@ find_package(catkin REQUIRED COMPONENTS
 # Generate services in the 'srv' folder
 add_service_files(
   FILES
+  Execution.srv
   MainCamera.srv
   MainUnet.srv
   MainSgnet.srv
-  RobotMain.srv
+  MainRobot.srv
 )
 
 ## Generate actions in the 'action' folder
@@ -170,6 +171,7 @@ catkin_install_python(PROGRAMS
    scripts/unet.py
    scripts/sgnet.py
    scripts/robot.py
+   scripts/execute.py
    DESTINATION ${CATKIN_PACKAGE_BIN_DESTINATION}
 )
 

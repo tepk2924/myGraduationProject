@@ -10,26 +10,33 @@ import rospy
 import numpy as np
 import pyzed.sl as sl
 
-zed = sl.Camera()
-# Create a InitParameters object and set configuration parameters
-init_params = sl.InitParameters()
-init_params.depth_mode = sl.DEPTH_MODE.NEURAL  # Use NEURAL depth mode
-init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
+def init():
+    global zed
+    zed = sl.Camera()
+    # Create a InitParameters object and set configuration parameters
+    init_params = sl.InitParameters()
+    init_params.depth_mode = sl.DEPTH_MODE.NEURAL  # Use NEURAL depth mode
+    init_params.coordinate_units = sl.UNIT.METER  # Use meter units (for depth measurements)
 
-# Open the camera
-status = zed.open(init_params)
-if status != sl.ERROR_CODE.SUCCESS: #Ensure the camera has opened succesfully
-    print("Cannot Open the Camera")
-    exit(1)
+    # Open the camera
+    status = zed.open(init_params)
+    if status != sl.ERROR_CODE.SUCCESS: #Ensure the camera has opened succesfully
+        print("Cannot Open the Camera")
+        exit(1)
 
-# Create and set RuntimeParameters after opening the camera
-runtime_parameters = sl.RuntimeParameters()
-runtime_parameters.enable_fill_mode = True
+    # Create and set RuntimeParameters after opening the camera
+    global runtime_parameters
+    runtime_parameters = sl.RuntimeParameters()
+    runtime_parameters.enable_fill_mode = True
 
-depth = sl.Mat()
-rgb_left = sl.Mat()
-point_cloud = sl.Mat()
-bridge = CvBridge()
+    global depth
+    global rgb_left
+    global point_cloud
+    global bridge
+    depth = sl.Mat()
+    rgb_left = sl.Mat()
+    point_cloud = sl.Mat()
+    bridge = CvBridge()
 
 def callback(req):
     if zed.grab(runtime_parameters) == sl.ERROR_CODE.SUCCESS:
@@ -65,6 +72,8 @@ def callback(req):
         
     return MainCameraResponse(image_msg, depth_msg, pc_msg, intrinsic_msg)
 
-rospy.init_node("camera")
-service = rospy.Service("main_camera", MainCamera, callback)
-rospy.spin()
+if __name__ == "__main__":
+    init()
+    rospy.init_node("camera")
+    service = rospy.Service("main_camera", MainCamera, callback)
+    rospy.spin()
