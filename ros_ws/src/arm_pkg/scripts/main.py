@@ -9,10 +9,8 @@ from arm_pkg.srv import MainUnet, MainUnetRequest, MainUnetResponse
 from arm_pkg.srv import MainSgnet, MainSgnetRequest, MainSgnetResponse
 from arm_pkg.srv import Execution, ExecutionRequest, ExecutionResponse
 from sensor_msgs.msg import Image, PointCloud2
-from std_msgs.msg import Float32MultiArray, Int16MultiArray, ColorRGBA
+from std_msgs.msg import Float32MultiArray, Int16MultiArray
 from cv_bridge import CvBridge, CvBridgeError
-# from geometry_msgs.msg import Point, Quaternion, Vector3
-# from visualization_msgs.msg import Marker, MarkerArray
 from PIL import Image as pilimage
 import numpy as np
 import rospy
@@ -23,7 +21,6 @@ def init():
     global pointcloud_publisher
     global grasps_pub
     pointcloud_publisher = rospy.Publisher('/pointcloud', PointCloud2, queue_size=10)
-    # grasps_pub = rospy.Publisher('/grasps', MarkerArray, queue_size=10)
 
     #To convert ROS msg from np.ndarray used by cv2, this code is needed.
     global bridge
@@ -117,6 +114,7 @@ def callback(req: ExecutionRequest):
     approaches_filtered = np.zeros((0, 3), dtype=np.float32)
 
     for point, score, approach in zip(pc_thresholded, scores_thresholded, approaches_thresholded):
+        #If the point is considered as valid (index 2)
         if point_segmap_dict[tuple(point)] == 2:
             pc_filtered = np.vstack((pc_filtered, point))
             scores_filtered = np.hstack((scores_filtered, score))
@@ -125,21 +123,6 @@ def callback(req: ExecutionRequest):
     #Converting np.ndarray sgnet node result from camera frame to world frame
     pc_filtered_world = ((camera_tf[:3, :3] @ pc_filtered.T) + camera_tf[:3, 3:4]).T
     approaches_filtered_world = (camera_tf[:3, :3] @ approaches_filtered.T).T
-
-    # #Publish world frame sgnet result
-    # marker_array = MarkerArray()
-    # for idx, (point, approach) in enumerate(zip(pc_filtered_world, approaches_filtered_world)):
-    #     marker = Marker()
-    #     marker.header.frame_id = "base_link"
-    #     marker.type = marker.ARROW
-    #     marker.id = idx
-    #     marker.color = ColorRGBA(0, 1, 0, 1)
-    #     marker.pose.position = Point(*point)
-    #     marker.pose.orientation = Quaternion(0, 0, 0, 1)
-    #     marker.scale = Vector3(0.005, 0.01, 0)
-    #     marker.points = [Point(0, 0, 0), Point(*(0.05*approach))]
-    #     marker_array.markers.append(marker)
-    # grasps_pub.publish(marker_array)
 
     #Creating & Returning service for robot node
     pc_filtered_msg = Float32MultiArray()

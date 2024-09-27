@@ -1,4 +1,5 @@
 <launch>
-    <node pkg="arm_pkg" type="test.py" name="test" respawn="false" output="screen"/>
-    <node pkg="rviz" type="rviz" name="rviz"/>
+    <!-- <node pkg="arm_pkg" type="test.py" name="test" respawn="false" output="screen"/>
+    <node pkg="rviz" type="rviz" name="rviz"/> -->
+    <node pkg="arm_pkg" type="robot.py" name="robot" respawn="false" output="screen"/>
 </launch>

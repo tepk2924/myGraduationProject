@@ -37,6 +37,10 @@ def init():
     bounding_box_pub = rospy.Publisher('bounding_box',
                                        Marker,
                                        queue_size=10)
+    global filtered_grasps_pub
+    filtered_grasps_pub = rospy.Publisher('filtered_grasps',
+                                          MarkerArray,
+                                          queue_size=10)
     global selected_grasp_pub
     selected_grasp_pub = rospy.Publisher('selected_grasp',
                                          Marker,
@@ -55,8 +59,8 @@ def abb_go_home():
     move_group.go(HOME_JOINT, wait=True)
     move_group.stop()
 
-def move_abb(point:np.ndarray | list,
-             approach:np.ndarray | list):
+def move_abb(point,
+             approach):
     '''
     Plan & Move abb robot
     ---
@@ -76,6 +80,25 @@ def move_abb(point:np.ndarray | list,
     plan = move_group.go(wait=True)
     move_group.stop()
     move_group.clear_pose_targets()
+
+def arrowmarker(color: list,
+                framename: str,
+                position: np.ndarray,
+                direction: np.ndarray,
+                arrow_radius: float,
+                arrow_tip_radius: float,
+                arrow_length: float,
+                idx: int) -> Marker:
+    marker = Marker()
+    marker.type = marker.ARROW
+    marker.color = ColorRGBA(*color)
+    marker.header.frame_id = framename
+    marker.pose.position = Point(*position)
+    marker.pose.orientation = Quaternion(0, 0, 0, 1)
+    marker.points = [Point(0, 0, 0), Point(*(arrow_length*direction))]
+    marker.scale = Vector3(arrow_radius, arrow_tip_radius, 0)
+    marker.id = idx
+    return marker
 
 def callback(req:MainRobotRequest):
     '''
@@ -118,6 +141,18 @@ def callback(req:MainRobotRequest):
     filtered_approaches = approaches[mask]
     filtered_scores = scores[mask]
 
+    #STEP 1-3: Visualize the filtered grasps
+    filtered_grasps = MarkerArray()
+    filtered_grasps.markers = [arrowmarker(color=[0, 0, 1, 1],
+                                           framename="base_link",
+                                           position=filtered_point,
+                                           direction=filtered_approach,
+                                           arrow_radius=0.005,
+                                           arrow_tip_radius=0.01,
+                                           arrow_length=0.05,
+                                           idx=idx) for idx, (filtered_point, filtered_approach) in enumerate(zip(filtered_points, filtered_approaches))]
+    filtered_grasps_pub.publish(filtered_grasps)
+
     #STEP 2: Select the grasp point with the highest score (highest area of range of wrench space)
     #STEP 2-1: Select
     highest_idx = np.argmax(filtered_scores, axis=0)
@@ -125,20 +160,14 @@ def callback(req:MainRobotRequest):
     decided_approach = filtered_approaches[highest_idx]
 
     #STEP 2-2: Visualize the selected grasp
-    selected_grasp = Marker()
-    #Selected grasp is red.
-    selected_grasp.color = ColorRGBA(1, 0, 0, 1)
-
-    selected_grasp.header.frame_id = "base_link"
-    selected_grasp.type = selected_grasp.ARROW
-    selected_grasp.pose.position = Point(*decided_grasp_point)
-
-    selected_grasp.id = 0
-    selected_grasp.pose.orientation = Quaternion(0, 0, 0, 1)
-    selected_grasp.scale = Vector3(0.01, 0.02, 0)
-    selected_grasp.points = [Point(0, 0, 0), Point(*(0.1*decided_approach))]
-
-    selected_grasp_pub.publish(selected_grasp)
+    selected_grasp_pub.publish(arrowmarker(color=[1, 0, 0, 1],
+                                           framename="base_link",
+                                           position=decided_grasp_point,
+                                           direction=decided_approach,
+                                           arrow_radius=0.01,
+                                           arrow_tip_radius=0.02,
+                                           arrow_length=0.1,
+                                           idx=0))
 
     #STEP 3: Use Moveit to make the robot move (or virtually simulate the movement)
     #STEP 3-1: The robot arm position itself a little bit(APPROACH_DIST) apart from surface
