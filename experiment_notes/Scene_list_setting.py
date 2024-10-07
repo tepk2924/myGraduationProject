@@ -17,6 +17,7 @@ with open(os.path.join(direc, "experiment_list_tmp.md"), "w") as f:
         valid_objs = random.sample(valid_list, valid_num)
         invalid_objs = random.sample(invalid_list, 5 - valid_num)
         f.write(f"* [ ] scene #{idx:03d}: {valid_num} valid, {5 - valid_num} invalid\n")
+        f.write(f"  + [ ] first attempt grasp\n")
         f.write(f"  + valid objs:\n")
         for obj in valid_objs:
             f.write(f"    - [ ] {obj}\n")
