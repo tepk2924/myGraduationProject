@@ -1,0 +1,4 @@
+<launch>
+    <param name="image_height" type="int" value="720"/>
+    <param name="image_width" type="int" value="1280"/>
+</launch>

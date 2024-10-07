@@ -50,6 +50,21 @@ def init():
     HOME_JOINT = [0.0, 0.0, 0.0, 0.0, pi/2, 0]
     global K_VEC
     K_VEC = np.array([[0, 0, 1]])
+    bbox_minX = rospy.get_param("bbox_minX")
+    bbox_maxX = rospy.get_param("bbox_maxX")
+    bbox_minY = rospy.get_param("bbox_minY")
+    bbox_maxY = rospy.get_param("bbox_maxY")
+    bbox_minZ = rospy.get_param("bbox_minZ")
+    bbox_maxZ = rospy.get_param("bbox_maxZ")
+    global minXYZ
+    global maxXYZ
+    minXYZ = np.array([bbox_minX, bbox_minY, bbox_minZ])
+    maxXYZ = np.array([bbox_maxX, bbox_maxY, bbox_maxZ])
+    global bounding_box_center
+    global bounding_box_scale
+    bounding_box_center = (minXYZ + maxXYZ)/2
+    bounding_box_scale = maxXYZ - minXYZ
+
 
 def abb_go_home():
     '''
@@ -116,11 +131,6 @@ def callback(req:MainRobotRequest):
 
     #STEP 1: Filter Out the grasp points out of range
     #STEP 1-1: Visualizing the bounding box representing the range of possible grasp points
-    minXYZ = np.array([0.4, -0.35, -0.03])
-    maxXYZ = np.array([0.8, 0.35, 0.5])
-    
-    bounding_box_center = (minXYZ + maxXYZ)/2
-    bounding_box_scale = maxXYZ - minXYZ
     
     bounding_box = Marker()
     #Bounding box is transparent blue

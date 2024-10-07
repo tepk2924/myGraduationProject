@@ -1,0 +1,4 @@
+<launch>
+    <param name="sgnet_model_name" type="str" value="sgnet_model_improveddataset"/>
+    <param name="sgnet_target_epoch" type="int" value="-1"/>
+</launch>

@@ -3,7 +3,7 @@ import random
 
 direc = os.path.dirname(__file__)
 
-N = 60
+N = 20
 
 with open(os.path.join(direc, "valid_objs.txt"), "r") as f:
     valid_list = [ele.rstrip() for ele in f.readlines()]

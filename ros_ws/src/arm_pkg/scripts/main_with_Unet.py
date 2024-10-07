@@ -30,7 +30,12 @@ def init():
     with open(os.path.join(os.path.dirname(__file__), "camera_tf.txt"), "r") as f:
         lines = f.readlines()[-4:]
     global camera_tf
-    camera_tf = np.array([list(map(float, line.split())) for line in lines])    
+    camera_tf = np.array([list(map(float, line.split())) for line in lines])
+    
+    global IMAGE_HEIGHT
+    global IMAGE_WIDTH
+    IMAGE_HEIGHT = rospy.get_param("image_height")
+    IMAGE_WIDTH = rospy.get_param("image_width")
 
 def callback(req: ExecutionRequest):
     #Getting color image & depth & pointcloud from camera node
@@ -87,7 +92,7 @@ def callback(req: ExecutionRequest):
     #Save segmap as PNG file
     pilimage.fromarray(np.array([[255, 0, 0],
                                  [0, 255, 0],
-                                 [0, 0, 255]], dtype=np.uint8)[segmap_np.reshape((720, 1280))], "RGB").save(os.path.join(os.path.dirname(__file__), "Segmap.png"))
+                                 [0, 0, 255]], dtype=np.uint8)[segmap_np.reshape((IMAGE_HEIGHT, IMAGE_WIDTH))], "RGB").save(os.path.join(os.path.dirname(__file__), "Segmap.png"))
     
     #Getting result from sgnet node
     service_req_sgnet = rospy.ServiceProxy("main_sgnet", MainSgnet)
@@ -113,6 +118,7 @@ def callback(req: ExecutionRequest):
     scores_filtered = np.zeros((0), dtype=np.float32)
     approaches_filtered = np.zeros((0, 3), dtype=np.float32)
 
+    #Filtering grasps using segmap created by my Unet.
     for point, score, approach in zip(pc_thresholded, scores_thresholded, approaches_thresholded):
         #If the point is considered as valid (index 2)
         if point_segmap_dict[tuple(point)] == 2:
@@ -142,6 +148,6 @@ def callback(req: ExecutionRequest):
 
 if __name__ == "__main__":
     init()
-    rospy.init_node("main")
+    rospy.init_node("main_with_Unet")
     service_as_server = rospy.Service("execution", Execution, callback)
     rospy.spin()

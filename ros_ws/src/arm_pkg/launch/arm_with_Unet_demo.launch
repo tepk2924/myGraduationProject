@@ -1,0 +1,12 @@
+<launch>
+    <node pkg="arm_pkg" type="main_with_Unet.py" name="main_with_Unet" respawn="false"/>
+    <node pkg="arm_pkg" type="camera.py" name="camera" respawn="false"/>
+    <node pkg="arm_pkg" type="unet.py" name="unet" respawn="false"/>
+    <node pkg="arm_pkg" type="sgnet.py" name="sgnet" respawn="false"/>
+    <node pkg="arm_pkg" type="robot.py" name="robot" respawn="false" output="screen"/>
+    <include file="$(find irb120_extended_suction_cup_moveit_config)/launch/demo.launch"/>
+    <include file="$(find arm_pkg)/launch/unet_param.xml"/>
+    <include file="$(find arm_pkg)/launch/sgnet_param.xml"/>
+    <include file="$(find arm_pkg)/launch/image_param.xml"/>
+    <include file="$(find arm_pkg)/launch/bounding_box.xml"/>
+</launch>

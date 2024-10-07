@@ -1,4 +1,0 @@
-<launch>
-    <node pkg="arm_pkg" type="test.py" name="test" respawn="false"/>
-    <node pkg="rviz" type="rviz" name="rviz"/>
-</launch>
