@@ -6,4 +6,32 @@ venv를 실행할 때의 파이썬 가상환경 경로는 import sys; print(sys.
 
 "catkin_make -DPYTHON_EXECUTABLE=/home/tepk2924/tepk2924Works/myGraduationProject/venv/bin/python"
 
-"catkin_make -DCATKIN_WHITELIST_PACKAGES="irb120_description;irb120_moveit_config;arm_pkg" -DPYTHON_EXECUTABLE=/home/riseabb/johan_ws/myGraduationProject/venv/bin/python3"
+```bash
+catkin_make -DCATKIN_WHITELIST_PACKAGES="irb120_description;irb120_moveit_config;arm_pkg;robotiq_epick_gripper_control" -DPYTHON_EXECUTABLE=/home/riseabb/johan_ws/myGraduationProject/venv/bin/python3
+```
+
+## Robotiq Usage
+
+* First, run roscore or roslaunch
+```bash
+roscore
+```
+
+* Launch robotiq epick driver node
+```bash
+rosrun robotiq_epick_gripper_control robotiq_epick_node.py /dev/ttyUSB0
+```
+* Run simple CLI
+```bash
+rosrun robotiq_epick_gripper_control robotiq_epick_simplecontroller_node.py
+```
+
+* Add permissions
+
+```bash
+sudo usermod -a -G dialout $USER
+```
+
+```bash
+sudo chmod 777 /dev/ttyUSB0
+```

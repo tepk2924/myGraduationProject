@@ -8,10 +8,11 @@ np.float = np.float_
 np.complex = np.complex_
 np.object = np.object_
 np.typeDict = np.sctypeDict
+import os
+os.environ['TF_CPP_MIN_LOG_LEVEL'] = '1'
 import tensorflow as tf
 import importlib
 import sys
-import os
 sys.path.append(os.path.dirname(os.path.dirname(os.path.dirname(__file__))))
 import yaml
 import glob
@@ -22,6 +23,13 @@ from scipy import signal
 from arm_pkg.srv import MainUnet, MainUnetResponse, MainUnetRequest
 
 def init():
+
+    #Solve tensorflow memory issue
+    physical_devices = tf.config.list_physical_devices('GPU')
+
+    for device in physical_devices:
+        tf.config.experimental.set_memory_growth(device, True)
+
     #msg -- np.ndarray bridge
     global bridge
     bridge = CvBridge()

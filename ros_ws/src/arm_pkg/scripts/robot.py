@@ -48,7 +48,6 @@ def init():
     #The robot's home position, the figures is the angles of robot joints.
     global HOME_JOINT
     HOME_JOINT = [0.0, 0.0, 0.0, 0.0, pi/2, 0]
-    abb_go_home()
     global K_VEC
     K_VEC = np.array([[0, 0, 1]])
 
@@ -60,7 +59,7 @@ def abb_go_home():
     move_group.stop()
 
 def move_abb(point,
-             approach):
+             approach) -> bool:
     '''
     Plan & Move abb robot
     ---
@@ -80,6 +79,7 @@ def move_abb(point,
     plan = move_group.go(wait=True)
     move_group.stop()
     move_group.clear_pose_targets()
+    return plan
 
 def arrowmarker(color: list,
                 framename: str,
@@ -116,8 +116,8 @@ def callback(req:MainRobotRequest):
 
     #STEP 1: Filter Out the grasp points out of range
     #STEP 1-1: Visualizing the bounding box representing the range of possible grasp points
-    minXYZ = np.array([0.2, -0.35, 0])
-    maxXYZ = np.array([0.9, 0.35, 0.5])
+    minXYZ = np.array([0.4, -0.35, -0.03])
+    maxXYZ = np.array([0.8, 0.35, 0.5])
     
     bounding_box_center = (minXYZ + maxXYZ)/2
     bounding_box_scale = maxXYZ - minXYZ
@@ -153,37 +153,56 @@ def callback(req:MainRobotRequest):
                                            idx=idx) for idx, (filtered_point, filtered_approach) in enumerate(zip(filtered_points, filtered_approaches))]
     filtered_grasps_pub.publish(filtered_grasps)
 
-    #STEP 2: Select the grasp point with the highest score (highest area of range of wrench space)
-    #STEP 2-1: Select
-    highest_idx = np.argmax(filtered_scores, axis=0)
-    decided_grasp_point = filtered_points[highest_idx]
-    decided_approach = filtered_approaches[highest_idx]
+    sorted_scores = filtered_scores.copy()
+    sorted_scores.sort()
+    RANK = 0
+    try:
+        while True:
+            RANK += 1
+            abb_go_home()
+            #STEP 2: Select the grasp point with the highest score (highest area of range of wrench space)
+            #STEP 2-1: Select
+            selected_idx = np.where(filtered_scores == sorted_scores[-RANK])[0]
+            decided_grasp_point = filtered_points[selected_idx][0]
+            decided_approach = filtered_approaches[selected_idx][0]
 
-    #STEP 2-2: Visualize the selected grasp
-    selected_grasp_pub.publish(arrowmarker(color=[1, 0, 0, 1],
-                                           framename="base_link",
-                                           position=decided_grasp_point,
-                                           direction=decided_approach,
-                                           arrow_radius=0.01,
-                                           arrow_tip_radius=0.02,
-                                           arrow_length=0.1,
-                                           idx=0))
+            #STEP 2-2: Visualize the selected grasp
+            selected_grasp_pub.publish(arrowmarker(color=[1, 0, 0, 1],
+                                                framename="base_link",
+                                                position=decided_grasp_point,
+                                                direction=decided_approach,
+                                                arrow_radius=0.01,
+                                                arrow_tip_radius=0.02,
+                                                arrow_length=0.1,
+                                                idx=0))
 
-    #STEP 3: Use Moveit to make the robot move (or virtually simulate the movement)
-    #STEP 3-1: The robot arm position itself a little bit(APPROACH_DIST) apart from surface
-    move_abb(point=decided_grasp_point + APPROACH_DIST*decided_approach,
-             approach=decided_approach)
-    
-    #STEP 3-2: The robot arm actually approaches the surface, and pull the object using the end effector.
-    move_abb(point=decided_grasp_point,
-             approach=decided_approach)
-    
-    #STEP 3-3: The robot goes a little backward, resulting it being at the first state.
-    move_abb(point=decided_grasp_point + APPROACH_DIST*decided_approach,
-             approach=decided_approach)
-    
-    #STEP 3-4: Make the robot goes to home pose.
-    abb_go_home()
+            #STEP 3: Use Moveit to make the robot move (or virtually simulate the movement)
+            #STEP 3-1: The robot arm position itself a little bit(APPROACH_DIST) apart from surface
+            ret = move_abb(point=decided_grasp_point + APPROACH_DIST*decided_approach,
+                        approach=decided_approach)
+            if not ret:
+                print("No plan is found for this grasp, continuing for other grasp.")
+                continue
+            
+            #STEP 3-2: The robot arm actually approaches the surface, and pull the object using the end effector.
+            ret = move_abb(point=decided_grasp_point,
+                        approach=decided_approach)
+            if not ret:
+                print("No plan is found for this grasp, continuing for other grasp.")
+                continue
+            
+            #STEP 3-3: The robot goes a little backward, resulting it being at the first state.
+            ret = move_abb(point=decided_grasp_point + APPROACH_DIST*decided_approach,
+                        approach=decided_approach)
+            if not ret:
+                print("No plan is found for this grasp, continuing for other grasp.")
+                continue
+
+            #STEP 3-4: Make the robot goes to home pose.
+            abb_go_home()
+            break
+    except IndexError:
+        print("Couldn't find the appropriate plan!")
 
     return MainRobotResponse()
 

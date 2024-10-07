@@ -4,7 +4,7 @@
     <node pkg="arm_pkg" type="unet.py" name="unet" respawn="false"/>
     <node pkg="arm_pkg" type="sgnet.py" name="sgnet" respawn="false"/>
     <node pkg="arm_pkg" type="robot.py" name="robot" respawn="false" output="screen"/>
-    <include file="/home/riseabb/johan_ws/myGraduationProject/ros_ws/src/drivers/irb120_extended_suction_cup_moveit_config/launch/demo.launch"/>
+    <include file="/home/riseabb/johan_ws/myGraduationProject/ros_ws/src/drivers/irb120_extended_suction_cup_moveit_config/launch/real.launch"/>
     <param name="unet_model_name" type="str" value="unet_model_improveddataset_attempt_4"/>
     <param name="unet_target_epoch" type="int" value="-1"/>
     <param name="sgnet_model_name" type="str" value="sgnet_model_improveddataset"/>
