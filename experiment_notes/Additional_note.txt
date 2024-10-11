@@ -1,3 +1,3 @@
 In the experiment, I will use 13 invalid objects and 9 valid objects.
-The "Mixed Object" is excluded because they are hard to decide whether they are valid or invalid, since that property changes their orientation.
+For "Mixed Object", I count the sprayer and watering can as "Valid Object" in this experiment since majority of their surface is smooth.
 To build the object list of each scene, I code some python script to decide that, making sure each scene have at least one valid object, since having no valid object in scene will cause "dividing by zero" problem when calculating success rate.

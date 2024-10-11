@@ -20,8 +20,8 @@ with open(os.path.join(direc, "experiment_list_tmp.md"), "w") as f:
         f.write(f"  + [ ] first attempt grasp\n")
         f.write(f"  + valid objs:\n")
         for obj in valid_objs:
-            f.write(f"    - [ ] {obj}\n")
+            f.write(f"    - [ ] successfully grasped {obj}\n")
         if valid_num != 5:
             f.write(f"  + invalid objs:\n")
             for obj in invalid_objs:
-                f.write(f"    - {obj}\n")
+                f.write(f"    - [ ] tried to grasp invalid {obj}\n")

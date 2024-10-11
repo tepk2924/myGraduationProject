@@ -9,5 +9,4 @@ invalid_8_thread_fine
 invalid_9_animal_doll_small
 invalid_10_complex_part
 invalid_11_clothes
-invalid_12_animal_doll_large
-invalid_13_knitted_bag
+invalid_12_knitted_bag

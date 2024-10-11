@@ -11,7 +11,7 @@ from moveit_commander import PlanningSceneInterface
 from moveit_commander import MoveGroupCommander
 import moveit_msgs.msg
 import geometry_msgs.msg
-from math import pi
+import math
 from std_msgs.msg import ColorRGBA
 from visualization_msgs.msg import Marker, MarkerArray
 from moveit_commander.conversions import pose_to_list
@@ -47,7 +47,7 @@ def init():
                                          queue_size=10)
     #The robot's home position, the figures is the angles of robot joints.
     global HOME_JOINT
-    HOME_JOINT = [0.0, 0.0, 0.0, 0.0, pi/2, 0]
+    HOME_JOINT = [0.0, 0.0, 0.0, 0.0, 0.0, 0.0]
     global K_VEC
     K_VEC = np.array([[0, 0, 1]])
     bbox_minX = rospy.get_param("bbox_minX")
@@ -64,6 +64,11 @@ def init():
     global bounding_box_scale
     bounding_box_center = (minXYZ + maxXYZ)/2
     bounding_box_scale = maxXYZ - minXYZ
+
+    #To avoid collision and ill-conditioned grasp, I will limit the angle of approach vectors.
+    angle_threshold = math.pi/4
+    global approach_z_threshold
+    approach_z_threshold = math.sin(angle_threshold)
 
 
 def abb_go_home():
@@ -147,11 +152,17 @@ def callback(req:MainRobotRequest):
 
     #STEP 1-2: Actually filtering out grasps
     mask = np.all((points >= minXYZ) & (points <= maxXYZ), axis=1)
-    filtered_points = points[mask]
-    filtered_approaches = approaches[mask]
-    filtered_scores = scores[mask]
+    filtered_bbox_points = points[mask]
+    filtered_bbox_approaches = approaches[mask]
+    filtered_bbox_scores = scores[mask]
 
-    #STEP 1-3: Visualize the filtered grasps
+    #STEP 1-3: Filter out grasps that has approach vector with low angle
+    mask = filtered_bbox_approaches[:, 2] > approach_z_threshold
+    filtered_points = filtered_bbox_points[mask]
+    filtered_approaches = filtered_bbox_approaches[mask]
+    filtered_scores = filtered_bbox_scores[mask]
+
+    #STEP 1-4: Visualize the filtered grasps
     filtered_grasps = MarkerArray()
     filtered_grasps.markers = [arrowmarker(color=[0, 0, 1, 1],
                                            framename="base_link",

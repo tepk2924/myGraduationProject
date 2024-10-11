@@ -58,8 +58,9 @@ def callback(req):
         pc_np[:, :, [1, 2]] *= -1
 
         #Camera coordinate origin calculated by PnP and the coordinate origin that ZED SDK uses are different. I really don't want to do this task like this.....
-        pc_np[:, :, 2] -= 0.06
-        pc_np[:, :, 1] += 0.03
+        pc_np[:, :, 0] += 0.025
+        pc_np[:, :, 1] += -0.01
+        pc_np[:, :, 2] += -0.041
 
         #Creating & Returning msgs containing PointCloud data and intrinsic camera matrix.
         pc_msg = Float32MultiArray()

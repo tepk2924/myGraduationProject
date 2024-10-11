@@ -7,3 +7,5 @@ valid_6_smooth_surface_toy_ball
 valid_7_smooth_surface_garden_trowel
 valid_8_transparent_holder
 valid_9_cylinder_chocolate
+mixed_1_plastic_watering_can
+mixed_2_smooth_surface_sprayer
