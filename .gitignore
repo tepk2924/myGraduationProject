@@ -33,7 +33,8 @@ ros_ws/src/zed-ros-wrapper
 ros_ws/build
 ros_ws/devel
 ros_ws/src/drivers
-ros_ws/src/arm_pkg/scripts/*.png
+ros_ws/src/arm_pkg/scripts/*.npy
+ros_ws/src/arm_pkg/scripts/Founded_ChessPoint.png
 .vscode
 sgnet_checkpoints/*
 IPA-3D1K

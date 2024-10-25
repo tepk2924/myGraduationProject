@@ -44,6 +44,7 @@ def callback(req: ExecutionRequest):
     resp1:MainCameraResponse = service_req_image_depth()
     image = resp1.img
     depth = resp1.depth
+    np.save(os.path.join(os.path.dirname(__file__), "Depth.npy"), np.array(depth.data).reshape(IMAGE_HEIGHT, IMAGE_WIDTH))
     pc = resp1.pointcloud
 
     #From msg to np.ndarray
