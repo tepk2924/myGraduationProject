@@ -81,7 +81,9 @@ if __name__ == '__main__':
 
         accuracy = accuracy_tracker(y_true=gt, y_pred=pred)
 
-        mask = tf.where(gt >= 1, True, False)
+        mask:tf.Tensor = tf.where(gt >= 1, True, False)
+        mask_np:np.ndarray = mask.numpy()
+        effective_pixels = np.sum(mask_np.astype(int))
         effective_accuracy = effective_accuracy_tracker(y_true=tf.boolean_mask(gt, mask), y_pred=tf.boolean_mask(pred, mask))
 
         gt_isvalid = tf.where(gt == 2, 1, 0)
@@ -93,10 +95,10 @@ if __name__ == '__main__':
         recall = recall_tracker(gt_isvalid, pred_isvalid)
         precision = precision_tracker(gt_isvalid, pred_isvalid)
 
-        results.append((scene_number, float(total_loss), float(accuracy), float(effective_accuracy), float(recall), float(precision)))
+        results.append((scene_number, float(total_loss), float(accuracy), float(effective_accuracy), float(recall), float(precision), int(effective_pixels)))
     results.sort(key = lambda x:x[1], reverse=True)
     with open(os.path.join(saved_model_dir, f"test_result_{saved_model_name}.txt"), "w") as f:
         f.write(f"result of {saved_model_name}\n")
-        f.write("#  loss   acc    ef_acc recall precis\n")
+        f.write("#   loss   acc    ef_acc recall precis eff_pixls\n")
         for r in results:
-            f.write(f"{r[0]:02d} {r[1]:.04f} {r[2]:.04f} {r[3]:.04f} {r[4]:.04f} {r[5]:.04f}\n")
+            f.write(f"{r[0]:03d} {r[1]:.04f} {r[2]:.04f} {r[3]:.04f} {r[4]:.04f} {r[5]:.04f} {r[6]:06d}\n")

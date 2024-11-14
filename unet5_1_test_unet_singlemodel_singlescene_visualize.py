@@ -5,6 +5,7 @@ import glob
 import yaml
 import importlib
 
+from PIL import Image
 import numpy as np
 np.bool = np.bool_
 np.int = np.int_
@@ -23,15 +24,18 @@ if __name__ == '__main__':
     for device in physical_devices:
         tf.config.experimental.set_memory_growth(device, True) # allow memory growth
 
-    saved_model_dir = input("Directory of the folder containing saved model (must be in the folder 'unet_checkpoints'): ")
+    # saved_model_dir = input("Directory of the folder containing saved model (must be in the folder 'unet_checkpoints'): ")
+    saved_model_dir = "/home/chohan/ws/myGraduationProject/unet_checkpoints/unet_model_improveddataset_attempt_4"
     saved_model_name = os.path.basename(saved_model_dir)
-    target_epoch = int(input("Target epoch : "))
+    # target_epoch = int(input("Target epoch : "))
+    target_epoch = 29
 
     if not os.path.isdir(saved_model_dir):
         raise ValueError('Model directory does not exist: {}'.format(saved_model_dir))
     log_dir = os.path.join(saved_model_dir, "logs")
 
-    target_hdf5folder = input("Directory of the folder containiing test hdf5scene files : ")
+    # target_hdf5folder = input("Directory of the folder containiing test hdf5scene files : ")
+    target_hdf5folder = "/home/chohan/ws/myGraduationProject/STEP3_hdf5scene_generated/attempt_4/test"
     arch = importlib.import_module(f"unet_checkpoints.{saved_model_name}.unet_architecture")
 
     test_dataset = arch.DataGenerator(target_hdf5folder)
@@ -104,7 +108,10 @@ if __name__ == '__main__':
     gt_segmap_RGB = convert_RGB[gt_segmap]
     pred_segmap_RGB = convert_RGB[pred_segmap]
 
-    depth_image = np.tile(np.expand_dims(np.uint8(255*(original_depth - np.min(original_depth))/(np.max(original_depth) - np.min(original_depth))), axis=-1), (1, 1, 3))
+    depth_norm = (original_depth - np.mean(original_depth))/np.std(original_depth)
+    scaled_depth = 127 - 127*depth_norm
+    depth_image = np.where(scaled_depth >= 255, 255, np.where(scaled_depth < 0, 0, scaled_depth)).astype(np.uint8)
+    depth_image = np.tile(np.expand_dims(depth_image, -1), (1, 1, 3))
 
     plt.subplot(1, 4, 1)
     plt.imshow(original_image)
@@ -128,4 +135,8 @@ if __name__ == '__main__':
 
     plt.figtext(0.5, 0.01, f"{os.path.basename(saved_model_dir)}\n{target_epoch = }\n{scene_number = }\n{total_loss = :.6f}\n{accuracy = :.4f}\n{effective_accuracy = :.4f}\n{recall = :.4f}\n{precision = :.4f}", ha='center', va='bottom', fontsize=12)
 
+    Image.fromarray(original_image).save(os.path.join(saved_model_dir, f"C_{scene_number:03d}.png"))
+    Image.fromarray(depth_image).save(os.path.join(saved_model_dir, f"D_{scene_number:03d}.png"))
+    Image.fromarray(gt_segmap_RGB).save(os.path.join(saved_model_dir, f"S*_{scene_number:03d}.png"))
+    Image.fromarray(pred_segmap_RGB).save(os.path.join(saved_model_dir, f"S_{scene_number:03d}.png"))
     plt.savefig(os.path.join(saved_model_dir, f"{os.path.basename(saved_model_dir)}_{target_epoch}Ep_datanum{scene_number}.png"), dpi=300)

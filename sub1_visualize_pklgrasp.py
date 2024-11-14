@@ -1,6 +1,6 @@
 import pickle
 from trimeshVisualize import Scene
-from old_common1_4_graspdata import GraspData
+from common1_4_graspdata import GraspData
 import numpy as np
 import trimesh
 
@@ -15,6 +15,7 @@ if __name__ == "__main__":
     # mesh = graspdata.mesh
     grasp_info = graspdata.grasp_info
     meta_data = graspdata.meta_data
+    path = graspdata.obj_path
 
     print("Displaying scene")
     my_scene = Scene()
@@ -47,6 +48,7 @@ if __name__ == "__main__":
         rendered_grasps += 1
     print(f"Meta Data : {meta_data}")
     print(f"Trying to render {rendered_grasps} grasps")
+    print(f"Path : {path}")
     #coordinate arrows with length of 0.1m.
     my_scene.plot_vector(np.array([0, 0, 0]), np.array([0.1, 0, 0]),
         color=[255, 0, 0, 255], radius_cyl=0.001)
@@ -54,4 +56,4 @@ if __name__ == "__main__":
         color=[0, 255, 0, 255], radius_cyl=0.001)
     my_scene.plot_vector(np.array([0, 0, 0]), np.array([0, 0, 0.1]),
         color=[0, 0, 255, 255], radius_cyl=0.001)
-    my_scene.display()
+    #my_scene.display()
