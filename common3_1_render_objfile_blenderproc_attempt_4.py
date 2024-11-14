@@ -80,12 +80,6 @@ for obj, pose in zip(objs, obj_poses):
             mat.set_principled_shader_value("Base Color", np.random.uniform([0, 0, 0, 1],
                                                                             [1, 1, 1, 1]))
 
-floor_fluc = 0.2*random.random() - 0.1
-objs[-1].apply_T(np.array([[1, 0, 0, 0],
-                           [0, 1, 0, 0],
-                           [0, 0, 1, floor_fluc],
-                           [0, 0, 0, 1]]))
-
 deg = math.pi/180
 lights:List[bproc.types.Light] = []
 

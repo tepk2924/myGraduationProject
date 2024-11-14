@@ -5,7 +5,7 @@ import os
 
 target_folder = os.path.dirname(__file__)
 
-OPTION = 3
+OPTION = 2
 if OPTION == 0:
     depth:np.ndarray = np.load(os.path.join(target_folder, "depth_binary.npy"))
     SIZE = 200
@@ -50,7 +50,7 @@ elif OPTION == 2:
     scene.add_geometry(creation.axis(origin_size=0.01,
                                      axis_radius=0.005))
     
-    scene.show(line_settings={'point_size':0.05})
+    scene.show(line_settings={'point_size':5})
 elif OPTION == 3:
     import trimesh
     from trimesh import creation
